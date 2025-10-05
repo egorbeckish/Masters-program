@@ -1,0 +1,61 @@
+Notebook[{Cell[
+CellGroupData[{Cell[
+BoxData[RowBox[{"Manipulate","[","\n"," ",RowBox[
+{RowBox[{RowBox[{RowBox[{"f","[","x_","]"}]," ",":="," ",RowBox[{RowBox[{"x","^","3"}]," ","-"," ",RowBox[
+{"2","x"}]," ","+"," ","1"}]}],";","\n"," ",RowBox[{RowBox[{"t","[",RowBox[{"x_",","," ","x0_"}],"]"}]," ",":="," ",RowBox[
+{RowBox[{"f","[","x0","]"}]," ","+"," ",RowBox[{RowBox[{RowBox[{"f","'"}],"[","x0","]"}],"*",RowBox[
+{"(",RowBox[{"x"," ","-"," ","x0"}],")"}]}]}]}],";","\n"," ","\n"," ",RowBox[{"Plot","[","\n","\[NonBreakingSpace]",RowBox[
+{RowBox[{"{","\n","\[NonBreakingSpace]",RowBox[{RowBox[{"f","[","x","]"}],",","\n","\[NonBreakingSpace]",RowBox[
+{"t","[",RowBox[{"x",","," ","x0"}],"]"}]}],"\n"," ","}"}],","," ","\n","\[NonBreakingSpace]",RowBox[
+{"{",RowBox[{"x",","," ",RowBox[{"-","3"}],","," ","3"}],"}"}]}],"\n","]"}]}],",","\n"," ","\n"," ",RowBox[
+{"{",RowBox[{"x0",","," ",RowBox[{"-","2"}],","," ","2",","," ","0.1"}],"}"}]}],"\n","]"}]],
+"Input",CellLabel -> "In[1]:= ",ExpressionUUID -> "a6f1997d-86a9-424c-bdda-ad5debc4017f"],Cell[
+BoxData[
+TagBox[StyleBox[DynamicModuleBox[{Set[x0$$,-2],Set[Typeset`show$$,True],Set[Typeset`bookmarkList$$,
+{}],Set[Typeset`bookmarkMode$$,"Menu"],Typeset`animator$$,Set[Typeset`animvar$$,1],Set[
+Typeset`name$$,"\"untitled\""],Set[Typeset`specs$$,{{Hold[x0$$],-2,2,0.1`,ControlType -> Manipulator}}],Set[
+Typeset`size$$,Automatic],Set[Typeset`update$$,0],Set[Typeset`initDone$$,False],Set[
+Typeset`skipInitDone$$,True],Set[Typeset`keyframeActionsQ$$,False],Set[Typeset`keyframeList$$,
+{}]},DynamicBox[Manipulate`ManipulateBoxes[1,StandardForm,RuleDelayed["Variables",
+{Set[x0$$,-2]}],RuleDelayed["ControllerVariables",{}],RuleDelayed["OtherVariables",
+{Typeset`show$$,Typeset`bookmarkList$$,Typeset`bookmarkMode$$,Typeset`animator$$,Typeset`animvar$$,Typeset`name$$,Typeset`specs$$,Typeset`size$$,Typeset`update$$,Typeset`initDone$$,Typeset`skipInitDone$$,Typeset`keyframeActionsQ$$,Typeset`keyframeList$$}],
+RuleDelayed["Body",CompoundExpression[SetDelayed[f[Pattern[x,Blank[]]],Plus[Power[
+x,3],Times[-1,Times[2,x]],1]],SetDelayed[t[Pattern[x,Blank[]],Pattern[x0,Blank[]]],
+Plus[f[x0],Times[Derivative[1][f][x0],Plus[x,Times[-1,x0]]]]],Plot[{f[x],t[x,x0$$]},
+{x,-3,3}]]],RuleDelayed["Specifications",{{x0$$,-2,2,0.1`}}],RuleDelayed["Options",
+{}],RuleDelayed["DefaultOptions",{}]],SingleEvaluation -> True],RuleDelayed[DynamicModuleValues,
+{}],RuleDelayed[Deinitialization,None],RuleDelayed[UntrackedVariables,{Typeset`size$$}],
+SynchronousInitialization -> True,RuleDelayed[UnsavedVariables,{Typeset`initDone$$}],
+RuleDelayed[UndoTrackedVariables,{Typeset`show$$,Typeset`bookmarkMode$$}],ExpressionUUID -> "00819b6d-1609-477d-b5dc-6f54ab59595c"],
+"Manipulate",Deployed -> True,StripOnInput -> False],Manipulate`InterpretManipulate[
+1]],StandardForm],"Output",CellLabel -> "Out[1]= ",ExpressionUUID -> "6ad99785-8390-41b4-9e55-0221da93e793"]},
+Open],ExpressionUUID -> "05d2734e-b43d-411f-9cbb-a56ca1d8194d"],Cell[
+CellGroupData[
+{Cell[
+BoxData[RowBox[{"Manipulate[\n Module[{f, g, x1, x2, k, b, tangentLine, contactPoint1, contactPoint2},\n  f[x_] := (x - 5)^2 - 2 a + 3;\n  g[x_] := (x + 3)^2 - 5 a;\n  \n  x1 = 5 + (3 a + 3)/16;\n  x2 = x1 - 8;\n  \n  k = (3 a + 3)/8;\n  b = f[x1] - k*x1;\n  \n  t[x_] := k*x + b;\n  dot1 = {x1, f[x1]};\n  dot2 = {x2, g[x2]};\n  \n  Plot[{f[x], g[x], t[x]}, {x, -10, 15},\n   PlotRange \[Rule] {-20, 30},\n   PlotStyle \[Rule] {Blue, Red, {Black, Thick, Dashed}}\n  ]\n ],\n \n {{a, 0}, -5, 5, 0.1}\n]"}]],
+"Input",CellLabel -> "In[2]:= ",ExpressionUUID -> "a1f7eab5-da2e-451b-8c3d-6cc57618c510"],Cell[
+BoxData[
+TagBox[StyleBox[DynamicModuleBox[{Set[a$$,0],Set[Typeset`show$$,True],Set[Typeset`bookmarkList$$,
+{}],Set[Typeset`bookmarkMode$$,"Menu"],Typeset`animator$$,Set[Typeset`animvar$$,1],Set[
+Typeset`name$$,"\"untitled\""],Set[Typeset`specs$$,{{{Hold[a$$],0},-5,5,0.1`,ControlType -> Manipulator}}],Set[
+Typeset`size$$,Automatic],Set[Typeset`update$$,0],Set[Typeset`initDone$$,False],Set[
+Typeset`skipInitDone$$,True],Set[Typeset`keyframeActionsQ$$,False],Set[Typeset`keyframeList$$,
+{}]},DynamicBox[Manipulate`ManipulateBoxes[1,StandardForm,RuleDelayed["Variables",
+{Set[a$$,0]}],RuleDelayed["ControllerVariables",{}],RuleDelayed["OtherVariables",
+{Typeset`show$$,Typeset`bookmarkList$$,Typeset`bookmarkMode$$,Typeset`animator$$,Typeset`animvar$$,Typeset`name$$,Typeset`specs$$,Typeset`size$$,Typeset`update$$,Typeset`initDone$$,Typeset`skipInitDone$$,Typeset`keyframeActionsQ$$,Typeset`keyframeList$$}],
+RuleDelayed["Body",Module[{f$,g$,x1$,x2$,k$,b$,tangentLine$,contactPoint1$,contactPoint2$},
+CompoundExpression[SetDelayed[f$[Pattern[x$,Blank[]]],Plus[Power[Plus[x$,-5],2],Times[
+-1,2,a$$],3]],SetDelayed[g$[Pattern[x$,Blank[]]],Plus[Power[Plus[x$,3],2],Times[-1,
+5,a$$]]],Set[x1$,Plus[5,Times[Plus[Times[3,a$$],3],Power[16,-1]]]],Set[x2$,Plus[x1$,
+-8]],Set[k$,Times[Plus[Times[3,a$$],3],Power[8,-1]]],Set[b$,Plus[f$[x1$],Times[-1,
+k$,x1$]]],SetDelayed[t[Pattern[x$,Blank[]]],Plus[Times[k$,x$],b$]],Set[dot1,{x1$,f$[
+x1$]}],Set[dot2,{x2$,g$[x2$]}],Plot[{f$[x],g$[x],t[x]},{x,-10,15},PlotRange -> {-20,30},
+PlotStyle -> {Blue,Red,{Black,Thick,Dashed}}]]]],RuleDelayed["Specifications",{{{a$$,0},-5,5,0.1`}}],
+RuleDelayed["Options",{}],RuleDelayed["DefaultOptions",{}]],SingleEvaluation -> True],
+RuleDelayed[DynamicModuleValues,{}],RuleDelayed[Deinitialization,None],RuleDelayed[
+UntrackedVariables,{Typeset`size$$}],SynchronousInitialization -> True,RuleDelayed[
+UnsavedVariables,{Typeset`initDone$$}],RuleDelayed[UndoTrackedVariables,{Typeset`show$$,Typeset`bookmarkMode$$}]],
+"Manipulate",Deployed -> True,StripOnInput -> False],Manipulate`InterpretManipulate[
+1]],StandardForm],"Output",CellLabel -> "Out[2]= ",ExpressionUUID -> "7548ba3f-066d-4251-aacc-7ec29152228e"]},
+Open],ExpressionUUID -> "7a56d5f1-150d-4915-96cb-46ffe2c7d4bf"]},StyleDefinitions -> "Chatbook.nb",
+FrontEndVersion -> "14.3 for Wolfram Cloud 1.73 (July 23, 2025)"]
