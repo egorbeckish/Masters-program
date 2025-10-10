@@ -1,0 +1,33 @@
+Notebook[{Cell[
+CellGroupData[{Cell[
+BoxData[RowBox[{"Manipulate","[","\n"," ",RowBox[
+{RowBox[{RowBox[{RowBox[{"f","[","x_","]"}]," ",":="," ",RowBox[{RowBox[{"x","^","3"}]," ","-"," ",RowBox[
+{"2","x"}]," ","+"," ","1"}]}],";","\n"," ",RowBox[{RowBox[{"t","[",RowBox[{"x_",","," ","x0_"}],"]"}]," ",":="," ",RowBox[
+{RowBox[{"f","[","x0","]"}]," ","+"," ",RowBox[{RowBox[{RowBox[{"f","'"}],"[","x0","]"}],"*",RowBox[
+{"(",RowBox[{"x"," ","-"," ","x0"}],")"}]}]}]}],";","\n"," ","\n"," ",RowBox[{"Plot","[","\n","\[NonBreakingSpace]",RowBox[
+{RowBox[{"{","\n","\[NonBreakingSpace]",RowBox[{RowBox[{"f","[","x","]"}],",","\n","\[NonBreakingSpace]",RowBox[
+{"t","[",RowBox[{"x",","," ","x0"}],"]"}]}],"\n"," ","}"}],","," ","\n","\[NonBreakingSpace]",RowBox[
+{"{",RowBox[{"x",","," ",RowBox[{"-","3"}],","," ","3"}],"}"}]}],"\n","]"}]}],",","\n"," ","\n"," ",RowBox[
+{"{",RowBox[{"x0",","," ",RowBox[{"-","2"}],","," ","2",","," ","0.1"}],"}"}]}],"\n","]"}]],
+"Input",CellLabel -> "In[1]:= ",ExpressionUUID -> "a6f1997d-86a9-424c-bdda-ad5debc4017f"],Cell[
+BoxData[
+TagBox[StyleBox[DynamicModuleBox[{Set[x0$$,-2],Set[Typeset`show$$,True],Set[Typeset`bookmarkList$$,
+{}],Set[Typeset`bookmarkMode$$,"Menu"],Typeset`animator$$,Set[Typeset`animvar$$,1],Set[
+Typeset`name$$,"\"untitled\""],Set[Typeset`specs$$,{{Hold[x0$$],-2,2,0.1`,ControlType -> Manipulator}}],Set[
+Typeset`size$$,Automatic],Set[Typeset`update$$,0],Set[Typeset`initDone$$,False],Set[
+Typeset`skipInitDone$$,True],Set[Typeset`keyframeActionsQ$$,False],Set[Typeset`keyframeList$$,
+{}]},DynamicBox[Manipulate`ManipulateBoxes[1,StandardForm,RuleDelayed["Variables",
+{Set[x0$$,-2]}],RuleDelayed["ControllerVariables",{}],RuleDelayed["OtherVariables",
+{Typeset`show$$,Typeset`bookmarkList$$,Typeset`bookmarkMode$$,Typeset`animator$$,Typeset`animvar$$,Typeset`name$$,Typeset`specs$$,Typeset`size$$,Typeset`update$$,Typeset`initDone$$,Typeset`skipInitDone$$,Typeset`keyframeActionsQ$$,Typeset`keyframeList$$}],
+RuleDelayed["Body",CompoundExpression[SetDelayed[f[Pattern[x,Blank[]]],Plus[Power[
+x,3],Times[-1,Times[2,x]],1]],SetDelayed[t[Pattern[x,Blank[]],Pattern[x0,Blank[]]],
+Plus[f[x0],Times[Derivative[1][f][x0],Plus[x,Times[-1,x0]]]]],Plot[{f[x],t[x,x0$$]},
+{x,-3,3}]]],RuleDelayed["Specifications",{{x0$$,-2,2,0.1`}}],RuleDelayed["Options",
+{}],RuleDelayed["DefaultOptions",{}]],SingleEvaluation -> True],RuleDelayed[DynamicModuleValues,
+{}],RuleDelayed[Deinitialization,None],RuleDelayed[UntrackedVariables,{Typeset`size$$}],
+SynchronousInitialization -> True,RuleDelayed[UnsavedVariables,{Typeset`initDone$$}],
+RuleDelayed[UndoTrackedVariables,{Typeset`show$$,Typeset`bookmarkMode$$}],ExpressionUUID -> "41d8733b-2d93-4072-813c-639a24b80257"],
+"Manipulate",Deployed -> True,StripOnInput -> False],Manipulate`InterpretManipulate[
+1]],StandardForm],"Output",CellLabel -> "Out[1]= ",ExpressionUUID -> "61a2260b-9452-4170-9b4d-3572470012ed"]},
+Open],ExpressionUUID -> "86775818-1490-4760-ae52-6c48b4e646fb"]},StyleDefinitions -> "Chatbook.nb",
+FrontEndVersion -> "14.3 for Wolfram Cloud 1.73 (July 23, 2025)"]
