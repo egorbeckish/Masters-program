@@ -175,8 +175,65 @@ SphericalRegion -> True]],RuleDelayed["Specifications",{{{x0$$,0},-1.5`,1.5`,0.1
 RuleDelayed["Options",{}],RuleDelayed["DefaultOptions",{}]],SingleEvaluation -> True],
 RuleDelayed[DynamicModuleValues,{}],RuleDelayed[Deinitialization,None],RuleDelayed[
 UntrackedVariables,{Typeset`size$$}],SynchronousInitialization -> True,RuleDelayed[
-UnsavedVariables,{Typeset`initDone$$}],RuleDelayed[UndoTrackedVariables,{Typeset`show$$,Typeset`bookmarkMode$$}]],
+UnsavedVariables,{Typeset`initDone$$}],RuleDelayed[UndoTrackedVariables,{Typeset`show$$,Typeset`bookmarkMode$$}],
+ExpressionUUID -> "f3608be7-1b5b-4de9-a930-5213fa0c35a8"],"Manipulate",Deployed -> True,
+StripOnInput -> False],Manipulate`InterpretManipulate[1]],StandardForm],"Output",
+CellLabel -> "Out[2]= ",ExpressionUUID -> "a0e21dc0-ce17-4501-924b-cf18c148dbd6"]},
+Open],ExpressionUUID -> "25f7df50-14be-4e49-b656-e447530cdab6"],Cell[
+CellGroupData[
+{Cell[
+BoxData[RowBox[{"Manipulate","[","\n"," ",RowBox[{RowBox[{"Module","[",RowBox[
+{RowBox[{"{",RowBox[{"f",","," ","x0",","," ","tanLine",","," ","plotRange"}],"}"}],",","\n","  ",RowBox[
+{RowBox[{RowBox[{"f","[","x_","]"}]," ",":="," ",RowBox[{"Sin","[","x","]"}]}],";","\n","  ",RowBox[
+{"x0"," ","="," ",RowBox[{"pt","[",RowBox[{"[","1","]"}],"]"}]}],";","\n"," ","\n","  ",RowBox[
+{RowBox[{"tanLine","[","x_","]"}]," ",":="," ",RowBox[{RowBox[{"f","[","x0","]"}]," ","+"," ",RowBox[
+{RowBox[{RowBox[{"f","'"}],"[","x0","]"}]," ",RowBox[{"(",RowBox[{"x"," ","-"," ","x0"}],")"}]}]}]}],";","\n","  ","\n","  ",RowBox[
+{"plotRange"," ","="," ",RowBox[{"{",RowBox[{RowBox[{"{"," ",RowBox[{RowBox[{RowBox[
+{"-","2"}]," ","*","Pi"}],","," ",RowBox[{"2"," ","*","Pi"}]}],"}"}],","," ",RowBox[
+{"{",RowBox[{RowBox[{"-","2"}],","," ","2"}],"}"}]}],"}"}]}],";","\n","  ","\n","  ",RowBox[
+{"Show","[","\n","   ",RowBox[{RowBox[{"Plot","[",RowBox[{RowBox[{"f","[","x","]"}],","," ",RowBox[
+{"{",RowBox[{"x",","," ",RowBox[{RowBox[{"-","2"}]," ","*","Pi"}],","," ",RowBox[
+{"2"," ","*","Pi"}]}],"}"}],","," ","\n","    ",RowBox[{"PlotStyle"," ","\[Rule]"," ",RowBox[
+{"{",RowBox[{"Blue",","," ","Thick"}],"}"}]}],","," ","\n","    ",RowBox[{"PlotRange"," ","\[Rule]"," ","plotRange"}],",","\n","    ",RowBox[
+{"GridLines"," ","\[Rule]"," ","Automatic"}],",","\n","    ",RowBox[{"Frame"," ","\[Rule]"," ","True"}],",","\n","    ",RowBox[
+{"Axes"," ","\[Rule]"," ","True"}]}],"]"}],",","\n","   ","\n","   ",RowBox[{"Plot","[",RowBox[
+{RowBox[{"tanLine","[","x","]"}],","," ",RowBox[{"{",RowBox[{"x",","," ",RowBox[{"x0"," ","-"," ","2"}],","," ",RowBox[
+{"x0"," ","+"," ","2"}]}],"}"}],","," ","\n","    ",RowBox[{"PlotStyle"," ","\[Rule]"," ",RowBox[
+{"{",RowBox[{"Red",","," ","Thick"}],"}"}]}],","," ","\n","    ",RowBox[{"PlotRange"," ","\[Rule]"," ","plotRange"}]}],"]"}],",","\n","   ","\n","   ",RowBox[
+{"Graphics","[",RowBox[{"{","\n","     ",RowBox[{"Red",","," ",RowBox[{"PointSize","[","0.03","]"}],","," ","\n","     ",RowBox[
+{"Point","[",RowBox[{"{",RowBox[{"x0",","," ",RowBox[{"f","[","x0","]"}]}],"}"}],"]"}],",","\n","     ","Black"}],"\n","   ","}"}],"]"}]}],"\n","  ","]"}]}]}],"\n"," ","]"}],",","\n"," ","\n"," ",RowBox[
+{"{",RowBox[{RowBox[{"{",RowBox[{"pt",","," ",RowBox[{"{",RowBox[{"0",","," ","0"}],"}"}]}],"}"}],","," ","Locator",","," ",RowBox[
+{"Appearance"," ","\[Rule]"," ",RowBox[{"Graphics","[",RowBox[{RowBox[{"{","\n","    ",RowBox[
+{"Red",","," ",RowBox[{"Disk","[",RowBox[{RowBox[{"{",RowBox[{"0",","," ","0"}],"}"}],","," ","0.1"}],"]"}],",","\n","    ","Black",","," ",RowBox[
+{"Circle","[",RowBox[{RowBox[{"{",RowBox[{"0",","," ","0"}],"}"}],","," ","0.1"}],"]"}]}],"\n","   ","}"}],","," ",RowBox[
+{"ImageSize"," ","\[Rule]"," ","15"}]}],"]"}]}]}],"}"}],",","\n"," ","\n"," ",RowBox[
+{"TrackedSymbols"," ","\[RuleDelayed]"," ",RowBox[{"{","pt","}"}]}],",","\n"," ",RowBox[
+{"ControlPlacement"," ","\[Rule]"," ","Bottom"}]}],"\n","]"}]],"Input",CellLabel -> "In[4]:= ",
+ExpressionUUID -> "44491ed5-8b22-4948-8a8f-6d3efced7b4f"],Cell[
+BoxData[TagBox[StyleBox[
+DynamicModuleBox[{Set[pt$$,{-3.695018137785975`,0.10647334910127038`}],Set[Typeset`show$$,
+True],Set[Typeset`bookmarkList$$,{}],Set[Typeset`bookmarkMode$$,"Menu"],Typeset`animator$$,Set[
+Typeset`animvar$$,1],Set[Typeset`name$$,"\"untitled\""],Set[Typeset`specs$$,{{{Hold[
+pt$$],{0,0}},Automatic,ControlType -> Locator}}],Set[Typeset`size$$,Automatic],Set[
+Typeset`update$$,0],Set[Typeset`initDone$$,False],Set[Typeset`skipInitDone$$,True],Set[
+Typeset`keyframeActionsQ$$,False],Set[Typeset`keyframeList$$,{}]},DynamicBox[Manipulate`ManipulateBoxes[
+1,StandardForm,RuleDelayed["Variables",{Set[pt$$,{0,0}]}],RuleDelayed["ControllerVariables",
+{}],RuleDelayed["OtherVariables",{Typeset`show$$,Typeset`bookmarkList$$,Typeset`bookmarkMode$$,Typeset`animator$$,Typeset`animvar$$,Typeset`name$$,Typeset`specs$$,Typeset`size$$,Typeset`update$$,Typeset`initDone$$,Typeset`skipInitDone$$,Typeset`keyframeActionsQ$$,Typeset`keyframeList$$}],
+RuleDelayed["Body",Module[{f$,x0$,tanLine$,plotRange$},CompoundExpression[SetDelayed[
+f$[Pattern[x,Blank[]]],Sin[x]],Set[x0$,Part[pt$$,1]],SetDelayed[tanLine$[Pattern[
+x$,Blank[]]],Plus[f$[x0$],Times[Derivative[1][f$][x0$],Plus[x$,Times[-1,x0$]]]]],
+Set[plotRange$,{{Times[-2,Pi],Times[2,Pi]},{-2,2}}],Show[Plot[f$[x],{x,Times[-2,Pi],Times[
+2,Pi]},PlotStyle -> {Blue,Thick},PlotRange -> plotRange$,GridLines -> Automatic,Frame -> True,
+Axes -> True],Plot[tanLine$[x],{x,Plus[x0$,-2],Plus[x0$,2]},PlotStyle -> {Red,Thick},
+PlotRange -> plotRange$],Graphics[{Red,PointSize[0.03`],Point[{x0$,f$[x0$]}],Black}]]]]],
+RuleDelayed["Specifications",{{{pt$$,{0,0}},Automatic,ControlType -> Locator,Appearance -> Graphics[
+{RGBColor[1,0,0],Disk[{0,0},0.1`],GrayLevel[0],Circle[{0,0},0.1`]},ImageSize -> 15]}}],
+RuleDelayed["Options",{RuleDelayed[TrackedSymbols,{pt$$}],ControlPlacement -> Bottom}],
+RuleDelayed["DefaultOptions",{}]],SingleEvaluation -> True],RuleDelayed[DynamicModuleValues,
+{}],RuleDelayed[Deinitialization,None],RuleDelayed[UntrackedVariables,{Typeset`size$$}],
+SynchronousInitialization -> True,RuleDelayed[UnsavedVariables,{Typeset`initDone$$}],
+RuleDelayed[UndoTrackedVariables,{Typeset`show$$,Typeset`bookmarkMode$$}],ExpressionUUID -> "54a2f768-913b-41a6-a1ee-3bf8bd749d53"],
 "Manipulate",Deployed -> True,StripOnInput -> False],Manipulate`InterpretManipulate[
-1]],StandardForm],"Output",CellLabel -> "Out[2]= ",ExpressionUUID -> "a0e21dc0-ce17-4501-924b-cf18c148dbd6"]},
-Open],ExpressionUUID -> "25f7df50-14be-4e49-b656-e447530cdab6"]},StyleDefinitions -> "Chatbook.nb",
+1]],StandardForm],"Output",CellLabel -> "Out[4]= ",ExpressionUUID -> "c76ee7de-ad39-4f8c-8360-34d704cb568e"]},
+Open],ExpressionUUID -> "9ff34343-8a4b-4b92-823b-8ac26b28d9f4"]},StyleDefinitions -> "Chatbook.nb",
 FrontEndVersion -> "14.3 for Wolfram Cloud 1.74 (September 30, 2025)"]
