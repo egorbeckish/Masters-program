@@ -1,4 +1,0 @@
-Automatic - 4
-Semi-Auto - 3
-Manual - 2
-Other - 1

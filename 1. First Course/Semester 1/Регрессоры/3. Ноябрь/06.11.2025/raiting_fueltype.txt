@@ -1,4 +1,0 @@
-Hybrid - 4
-Petrol - 3
-Diesel - 2
-Other - 1
