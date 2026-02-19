@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Анализ главных компонент — Лекции 1–2</title>
+
+  <!-- Reveal.js CDN -->
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/theme/white.css" id="theme">
+
+  <!-- Reveal.js core + Math plugin -->
+  <script src="https://unpkg.com/reveal.js/dist/reveal.js"></script>
+  <script src="https://unpkg.com/reveal.js/plugin/math/math.js"></script>
+
+  <style>
+    .accent { color:#007acc; font-weight:bold; }
+    .small { font-size:0.8em; }
+    .code { font-family: "Fira Code", "Consolas", monospace; font-size:0.8em; }
+    .two-col { display:flex; gap:2rem; align-items:flex-start; }
+    .two-col > div { flex:1; }
+    .tag { display:inline-block; padding:2px 6px; border-radius:4px; background:#eee; margin:2px; }
+    .en { color:#555; font-style:italic; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================================
+     ТИТУЛЬНЫЙ СЛАЙД
+=============================================================== -->
+<section>
+  <h2>Анализ главных компонент (PCA)</h2>
+  <p class="small">
+    <span class="accent">PCA</span> — Principal Component Analysis (анализ главных компонент)
+  </p>
+  <h3>Лекции 1–2. Введение, цели, связь с градиентными методами</h3>
+  <p>Магистратура: <span class="accent">«Анализ больших данных, нейросети, ИИ»</span></p>
+  <p class="small">Инструменты курса: Python + Google Colab, Overleaf, при необходимости Wolfram Mathematica</p>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: СВЯЗЬ С ПРЕДЫДУЩИМ КУРСОМ
+=============================================================== -->
+<section>
+  <h3>От градиентных методов к PCA</h3>
+  <div class="two-col">
+    <div>
+      <p><span class="accent">Предыдущий курс:</span></p>
+      <ul>
+        <li>Градиентные методы оптимизации в \(\mathbb{R}^n\).</li>
+        <li>Метод сепаратрис и геометрия потоков.</li>
+        <li>Работа с функционалами вида \(f(x) = x^\top A x + b^\top x\).</li>
+      </ul>
+    </div>
+    <div>
+      <p><span class="accent">Новый курс (PCA — Principal Component Analysis):</span></p>
+      <ul>
+        <li>PCA как оптимизация квадратичной формы на сфере: максимум дисперсии
+          (<a href="http://iro.umontreal.ca/~pift6080/H09/documents/papers/pca_tutorial.pdf" target="_blank">Smith, PCA Tutorial</a>).[web:14]
+        </li>
+        <li>Собственные значения/векторы и SVD вместо итерационных спусков
+          (<a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL, Hastie et al.</a>).[web:17]
+        </li>
+        <li>Градиентные идеи → интуиция по экстремумам и стационарным точкам
+          (<a href="https://ocw.mit.edu/courses/9-40-introduction-to-neural-computation-spring-2018/" target="_blank">MIT 9.40</a>).[web:16]
+        </li>
+      </ul>
+    </div>
+  </div>
+  <p class="small">
+    Исторический обзор и современные расширения PCA:
+    <a href="https://www.semanticscholar.org/paper/Principal-component-analysis:-a-review-and-recent-Jolliffe-Cadima/5bc875d65df812f9617d8ba5" target="_blank">
+      Jolliffe & Cadima (2016)
+    </a>.[web:31]
+  </p>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ПЛАН ВСЕГО КУРСА
+=============================================================== -->
+<section>
+  <h3>План курса (8 лекций + 16 практик)</h3>
+  <ul>
+    <li><span class="accent">Лекции 1–2:</span> Введение, базовая геометрия PCA, постановка задач.</li>
+    <li>Лекция 3: PCA как задача оптимизации, связь с SVD и спектральным разложением
+      (<a href="http://iro.umontreal.ca/~pift6080/H09/documents/papers/pca_tutorial.pdf" target="_blank">Smith</a>,
+       <a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:14][web:17]
+    </li>
+    <li>Лекция 4: Практический PCA — препроцессинг, выбор числа компонент, интерпретация.[web:17]</li>
+    <li>Лекция 5: Высокомерные данные, регуляризация, sparse PCA
+      (<a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>,
+       <a href="https://www.semanticscholar.org/paper/Principal-component-analysis:-a-review-and-recent-Jolliffe-Cadima/5bc875d65df812f9617d8ba5" target="_blank">Jolliffe & Cadima</a>). [web:17][web:31]
+    </li>
+    <li>Лекция 6: Kernel PCA и сравнение с t‑SNE/UMAP.[web:17]</li>
+    <li>Лекция 7: Probabilistic PCA, EM‑алгоритм, байесовские расширения.[web:17]</li>
+    <li>Лекция 8: Проекты и подготовка статьи (Q1‑ориентированный формат)
+      (<a href="https://people.math.harvard.edu/~aseigal/fall23_syllabus.pdf" target="_blank">пример курса</a>). [web:19]
+    </li>
+  </ul>
+  <p class="small">Детальный план практик представлен отдельно в конце блока.</p>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ПЛАН ПРАКТИЧЕСКИХ ЗАНЯТИЙ
+=============================================================== -->
+<section>
+  <h3>План практик (обзор)</h3>
+  <ul class="small">
+    <li>П1–П2: Разведочный анализ, PCA «с нуля» в NumPy, проверка против scikit‑learn
+      (<a href="http://iro.umontreal.ca/~pift6080/H09/documents/papers/pca_tutorial.pdf" target="_blank">Smith</a>,
+       <a href="https://www.geeksforgeeks.org/machine-learning/how-to-install-sklearn-in-colab/" target="_blank">sklearn в Colab</a>). [web:14][web:21]
+    </li>
+    <li>П3–П4: Scree‑plot, explained variance, визуализация и кластеризация в пространстве компонент
+      (<a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:17]
+    </li>
+    <li>П5–П6: PCA в CV (eigenfaces) и NLP (эмбеддинги)
+      (<a href="https://docs.opencv.org/4.x/d1/dee/tutorial_introduction_to_pca.html" target="_blank">OpenCV PCA</a>,
+       <a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:13][web:17]
+    </li>
+    <li>П7–П8: PCA для временных рядов и аномалий.</li>
+    <li>П9–П10: Высокомерные данные, shrinkage covariance, sparse PCA
+      (<a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>,
+       <a href="https://www.semanticscholar.org/paper/Principal-component-analysis:-a-review-and-recent-Jolliffe-Cadima/5bc875d65df812f9617d8ba5" target="_blank">Jolliffe & Cadima</a>). [web:17][web:31]
+    </li>
+    <li>П11–П12: Kernel PCA, сравнение с t‑SNE/UMAP.[web:17]</li>
+    <li>П13–П14: Probabilistic PCA и комплексный кейс.[web:17]</li>
+    <li>П15–П16: Подготовка статьи, репетиции презентаций.[web:19]</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: МОТИВАЦИЯ — ЗАЧЕМ НУЖЕН PCA
+=============================================================== -->
+<section>
+  <h3>Зачем нужен PCA в Big Data / AI</h3>
+  <ul>
+    <li>Сотни и тысячи признаков → «проклятие размерности» и шум.[web:17][web:31]</li>
+    <li>Нужен компактный набор осмысленных направлений вариации данных.</li>
+    <li>PCA уменьшает размерность с минимальной потерей информации (в смысле дисперсии)
+      (<a href="http://iro.umontreal.ca/~pift6080/H09/documents/papers/pca_tutorial.pdf" target="_blank">Smith</a>,
+       <a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:14][web:17]
+    </li>
+    <li>Используется в визуализации, сжатии данных, шумоподавлении, обнаружении аномалий
+      (<a href="https://docs.opencv.org/4.x/d1/dee/tutorial_introduction_to_pca.html" target="_blank">OpenCV PCA</a>). [web:13][web:31]
+    </li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ИСТОРИЯ PCA
+=============================================================== -->
+<section>
+  <h3>История метода PCA</h3>
+  <ul>
+    <li>1901 — Карл Пирсон (Karl Pearson) формулирует геометрическую идею главных осей вариации
+      (<a href="https://en.wikipedia.org/wiki/Principal_component_analysis" target="_blank">Wikipedia PCA</a>). [web:27][web:30]
+    </li>
+    <li>1930‑е — Гарольд Хотеллинг (Harold Hotelling) вводит термин «principal components» и строгую статистическую формулировку.[web:27][web:30]</li>
+    <li>Дальнейшее развитие: многомерная статистика, анализ данных, машинное обучение.[web:27][web:31]</li>
+    <li>Современные обзоры и расширения —
+      <a href="https://www.semanticscholar.org/paper/Principal-component-analysis:-a-review-and-recent-Jolliffe-Cadima/5bc875d65df812f9617d8ba5" target="_blank">
+        Jolliffe & Cadima (2016)
+      </a>.[web:31]
+    </li>
+  </ul>
+  <p class="small">
+    История: <a href="https://en.wikipedia.org/wiki/Principal_component_analysis" target="_blank">Wikipedia</a>,
+    обзор: Jolliffe & Cadima, Phil. Trans. R. Soc. A.[web:27][web:31]
+  </p>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ПРАКТИЧЕСКАЯ ЗНАЧИМОСТЬ
+=============================================================== -->
+<section>
+  <h3>Практическая значимость PCA</h3>
+  <ul>
+    <li>Компрессия и денойзинг изображений, eigenfaces и ориентация объектов
+      (<a href="https://docs.opencv.org/4.x/d1/dee/tutorial_introduction_to_pca.html" target="_blank">OpenCV PCA</a>). [web:13]
+    </li>
+    <li>Визуализация высокомерных эмбеддингов (NLP, рекомендации, графы)
+      (<a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:17]
+    </li>
+    <li>Биоинформатика и omics‑данные: скрытые факторы, подтипы пациентов
+      (см. примеры в обзоре
+      <a href="https://www.semanticscholar.org/paper/Principal-component-analysis:-a-review-and-recent-Jolliffe-Cadima/5bc875d65df812f9617d8ba5" target="_blank">
+        Jolliffe & Cadima
+      </a>). [web:31]
+    </li>
+    <li>Промышленность и IoT: многомерная диагностика и обнаружение аномалий.[web:31]</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: СВЯЗЬ С ГРАДИЕНТНЫМИ МЕТОДАМИ (ПЕРВЫЙ УРОВЕНЬ)
+=============================================================== -->
+<section>
+  <h3>Связь с градиентными методами (1)</h3>
+  <p>Первая главная компонента задаётся задачей:</p>
+  <p>\[
+    \max_{w \in \mathbb{R}^p} \quad w^\top S w \quad \text{при} \quad \|w\| = 1,
+  \]</p>
+  <p>где \(S\) — ковариационная матрица
+    (<a href="http://iro.umontreal.ca/~pift6080/H09/documents/papers/pca_tutorial.pdf" target="_blank">Smith, PCA Tutorial</a>,
+     <a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:14][web:17]
+  </p>
+  <ul>
+    <li>Это максимум квадратичной формы на единичной сфере.</li>
+    <li>Стационарные точки: \(\nabla (w^\top S w - \lambda (w^\top w - 1)) = 0\) → \(S w = \lambda w\).[web:14][web:17]</li>
+    <li>Главные компоненты — собственные векторы \(S\) с наибольшими собственными значениями.</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: СВЯЗЬ С ГРАДИЕНТНЫМИ МЕТОДАМИ (ВТОРОЙ УРОВЕНЬ)
+=============================================================== -->
+<section>
+  <h3>Связь с градиентными методами (2)</h3>
+  <ul>
+    <li>Можно применять градиентный подъём по \(w\) с проекцией на сферу (gradient ascent on the sphere).[web:14]</li>
+    <li>Метод степенных итераций (power method) — частный случай итеративного обновления \(w\) вдоль направления \(S w\).[web:17]</li>
+    <li>Сепаратрисы фазового потока градиентной системы разделяют притягивающие множества для разных собственных векторов.</li>
+    <li>На практике используют SVD/спектральные методы для устойчивости и скорости
+      (<a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>,
+       <a href="https://www.semanticscholar.org/paper/Principal-component-analysis:-a-review-and-recent-Jolliffe-Cadima/5bc875d65df812f9617d8ba5" target="_blank">Jolliffe & Cadima</a>). [web:17][web:31]
+    </li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ПРОСТОЙ ГЕОМЕТРИЧЕСКИЙ ПРИМЕР (R2)
+=============================================================== -->
+<section>
+  <h3>PCA в \(\mathbb{R}^2\): простой пример</h3>
+  <ul>
+    <li>Имеем облако точек, вытянутое вдоль некоторой диагонали.</li>
+    <li>Первая главная компонента — направление максимальной дисперсии (длинная ось эллипса).[web:14][web:16]</li>
+    <li>Вторая компонента — ортогональное направление с максимальной оставшейся дисперсией.[web:14]</li>
+    <li>Проекция на первую компоненту ≈ одномерное представление данных.</li>
+  </ul>
+  <p class="small">
+    Иллюстрации: <a href="http://iro.umontreal.ca/~pift6080/H09/documents/papers/pca_tutorial.pdf" target="_blank">Smith, PCA Tutorial</a>.[web:14]
+  </p>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ЧУТЬ БОЛЕЕ СЛОЖНЫЙ ПРИМЕР (CV)
+=============================================================== -->
+<section>
+  <h3>Более сложный пример: изображения (CV)</h3>
+  <ul>
+    <li>Каждое изображение лица → длинный вектор пикселей.[web:13]</li>
+    <li>PCA на матрице таких векторов даёт eigenfaces — базис типичных вариаций лица.[web:13]</li>
+    <li>Обрезав до первых \(k\) компонент, получаем сжатое/очищенное представление.[web:13]</li>
+    <li>Оптимизационная постановка и спектральное разложение как в \(\mathbb{R}^2\)
+      (<a href="https://docs.opencv.org/4.x/d1/dee/tutorial_introduction_to_pca.html" target="_blank">OpenCV PCA</a>,
+       <a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:13][web:17]
+    </li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ФОРМАЛЬНАЯ ПОСТАНОВКА ЗАДАЧИ PCA
+=============================================================== -->
+<section>
+  <h3>Формальная постановка PCA</h3>
+  <ul>
+    <li>Матрица данных: \(X \in \mathbb{R}^{n \times p}\), строки — наблюдения, столбцы — признаки.[web:14][web:17]</li>
+    <li>Центрируем данные: вычитаем среднее по каждому признаку.</li>
+    <li>Ковариационная матрица: \(S = \frac{1}{n-1} X^\top X\) (для центрированных данных).[web:14]</li>
+    <li>Собственные пары \((\lambda_k, w_k)\) ковариационной матрицы дают главные компоненты.[web:14][web:17]</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ОБЪЯСНЁННАЯ ДИСПЕРСИЯ И ВЫБОР ЧИСЛА КОМПОНЕНТ
+=============================================================== -->
+<section>
+  <h3>Объяснённая дисперсия и выбор \(k\)</h3>
+  <ul>
+    <li>Собственные значения \(\lambda_1 \ge \lambda_2 \ge \dots \ge \lambda_p\) — дисперсии компонент.[web:14][web:17]</li>
+    <li>Доля объяснённой дисперсии:
+      \[
+        \text{EVR}_k = \frac{\sum_{i=1}^k \lambda_i}{\sum_{i=1}^p \lambda_i}.
+      \]
+    </li>
+    <li>Scree‑plot: график \(\lambda_i\) или \(\text{EVR}_k\) для выбора числа компонент
+      (<a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:17]
+    </li>
+    <li>Будет подробно разобрано на последующих лекциях и практиках.</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ПРИМЕР КОДА ДЛЯ LECTION 1 (COLAB)
+=============================================================== -->
+<section>
+  <h3>Лекция 1: пример кода в Colab (NumPy PCA)</h3>
+  <pre class="code"><code>
+import numpy as np
+
+# X: n × p, центрированные данные
+Xc = X - X.mean(axis=0, keepdims=True)
+S  = Xc.T @ Xc / (Xc.shape[0] - 1)
+
+eigvals, eigvecs = np.linalg.eigh(S)  # симметричная матрица
+idx = np.argsort(eigvals)[::-1]
+eigvals = eigvals[idx]
+eigvecs = eigvecs[:, idx]
+
+# Проекции на первые k компонент
+k = 2
+Z = Xc @ eigvecs[:, :k]
+  </code></pre>
+  <p class="small">
+    Сравнение с <span class="code">sklearn.decomposition.PCA</span> будет в практике 2
+    (<a href="https://www.geeksforgeeks.org/machine-learning/how-to-install-sklearn-in-colab/" target="_blank">пример настройки</a>). [web:21]
+  </p>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ЛЕКЦИЯ 2 — УГЛУБЛЕНИЕ В ЛИНЕЙНУЮ АЛГЕБРУ + SVD
+=============================================================== -->
+<section>
+  <h3>Лекция 2: линейная алгебра и SVD</h3>
+  <ul>
+    <li>Ортогональные преобразования и ортонормированные базисы.[web:16][web:17]</li>
+    <li>Собственные значения/векторы симметрических матриц.</li>
+    <li>Сингулярное разложение (SVD — Singular Value Decomposition) \(X = U \Sigma V^\top\).[web:17]</li>
+    <li>Связь между SVD и PCA (столбцы \(V\) → собственные векторы \(S\))
+      (<a href="http://iro.umontreal.ca/~pift6080/H09/documents/papers/pca_tutorial.pdf" target="_blank">Smith</a>,
+       <a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:14][web:17]
+    </li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ЛЕКЦИЯ 2 — PCA ЧЕРЕЗ SVD
+=============================================================== -->
+<section>
+  <h3>PCA через SVD</h3>
+  <ul>
+    <li>Для центрированного \(X\): SVD \(X = U \Sigma V^\top\).[web:17]</li>
+    <li>Ковариационная матрица \(S = \frac{1}{n-1} X^\top X = V \frac{\Sigma^2}{n-1} V^\top\).[web:14]</li>
+    <li>Главные направления (loadings) — столбцы \(V\).</li>
+    <li>Сингулярные значения \(\sigma_i\) связаны с дисперсией компонент:
+      \(\lambda_i = \sigma_i^2/(n-1)\).[web:14][web:17]
+    </li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ЛЕКЦИЯ 2 — ЛИНЕЙНАЯ СТАТИСТИКА
+=============================================================== -->
+<section>
+  <h3>Лекция 2: многомерная статистика</h3>
+  <ul>
+    <li>Многомерное нормальное распределение \( \mathcal{N}(\mu, S)\).[web:17]</li>
+    <li>Эллипсоиды рассеяния и их главные оси.</li>
+    <li>Инвариантность PCA относительно вращений координат.</li>
+    <li>Роль масштабирования (covariance vs correlation matrix)
+      (<a href="http://iro.umontreal.ca/~pift6080/H09/documents/papers/pca_tutorial.pdf" target="_blank">Smith</a>,
+       обсуждение у Jolliffe & Cadima).[web:14][web:28][web:31]
+    </li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ПРИМЕР ДЛЯ ЛЕКЦИИ 2 — ВЛИЯНИЕ МАСШТАБОВ
+=============================================================== -->
+<section>
+  <h3>Пример: влияние масштабов признаков</h3>
+  <ul>
+    <li>Если один признак измеряется в больших единицах → доминирует в ковариационной матрице.[web:28]</li>
+    <li>Решение: стандартизация (z‑score) или использование корреляционной матрицы.</li>
+    <li>Покажем на практике: без нормировки PCA «видит» только один признак.</li>
+    <li>Детально обсуждается в обзоре
+      <a href="https://www.semanticscholar.org/paper/Principal-component-analysis:-a-review-and-recent-Jolliffe-Cadima/5bc875d65df812f9617d8ba5" target="_blank">
+        Jolliffe & Cadima (2016)
+      </a>.[web:31]
+    </li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ПРИМЕР КОДА ДЛЯ ЛЕКЦИИ 2 (SVD)
+=============================================================== -->
+<section>
+  <h3>Лекция 2: пример кода (PCA через SVD)</h3>
+  <pre class="code"><code>
+import numpy as np
+
+Xc = X - X.mean(axis=0, keepdims=True)
+U, S, Vt = np.linalg.svd(Xc, full_matrices=False)
+
+# V: loadings (principal axes in feature space)
+V = Vt.T
+eigvals = (S ** 2) / (Xc.shape[0] - 1)
+
+# Проекции (scores)
+Z = Xc @ V[:, :2]
+  </code></pre>
+  <p class="small">
+    Эта формула используется в большинстве реализаций PCA в научных пакетах
+    (<a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:17]
+  </p>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ПРИМЕРЫ НАУЧНЫХ ПРИЛОЖЕНИЙ (ССЫЛКИ НА СТАТЬИ)
+=============================================================== -->
+<section>
+  <h3>PCA в научных статьях (примеры)</h3>
+  <ul class="small">
+    <li>Обзор и современные направления: Jolliffe, I.T., Cadima, J. (2016), “Principal component analysis: a review and recent developments”.
+      <br>
+      <a href="https://www.semanticscholar.org/paper/Principal-component-analysis:-a-review-and-recent-Jolliffe-Cadima/5bc875d65df812f9617d8ba5" target="_blank">
+        Semantic Scholar (Jolliffe & Cadima)
+      </a>.[web:31]
+    </li>
+    <li>Классический учебник: Hastie, Tibshirani, Friedman, “The Elements of Statistical Learning”, глава 14 (PCA и DR).
+      <br>
+      <a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">
+        PDF ESL
+      </a>.[web:17]
+    </li>
+    <li>Инженерные приложения в CV: PCA tutorial в OpenCV (ориентация объектов, eigenfaces).
+      <br>
+      <a href="https://docs.opencv.org/4.x/d1/dee/tutorial_introduction_to_pca.html" target="_blank">
+        Introduction to PCA — OpenCV
+      </a>.[web:13]
+    </li>
+    <li>Другие приложения собраны в обзоре Jolliffe & Cadima (пример Q1 уровня).[web:31]</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ИТОГОВЫЕ ЦЕЛИ ДЛЯ МАГИСТРАНТОВ
+=============================================================== -->
+<section>
+  <h3>Цели для магистрантов к концу курса</h3>
+  <ul>
+    <li>Уверенно выводить и интерпретировать PCA, включая SVD и спектральный подход
+      (<a href="http://iro.umontreal.ca/~pift6080/H09/documents/papers/pca_tutorial.pdf" target="_blank">Smith</a>,
+       <a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:14][web:17]
+    </li>
+    <li>Реализовывать PCA и его расширения (sparse, kernel, probabilistic) в Python.[web:17][web:31]</li>
+    <li>Готовить воспроизводимые ноутбуки и графики (Google Colab → Git/Drive → Overleaf)
+      (<a href="https://www.geeksforgeeks.org/machine-learning/how-to-install-sklearn-in-colab/" target="_blank">Colab + sklearn</a>). [web:21]
+    </li>
+    <li>Сформулировать и реализовать исследование с PCA и оформить его в форме статьи уровня Q1
+      (<a href="https://people.math.harvard.edu/~aseigal/fall23_syllabus.pdf" target="_blank">пример курса Harvard</a>). [web:19]
+    </li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ТЕРМИНЫ И СОКРАЩЕНИЯ (1)
+=============================================================== -->
+<section>
+  <h3>Термины и сокращения (1)</h3>
+  <ul class="small">
+    <li><span class="accent">PCA</span> — Principal Component Analysis (анализ главных компонент).</li>
+    <li><span class="accent">PC</span> — Principal Component (главная компонента).</li>
+    <li><span class="accent">Explained variance</span> — Объяснённая дисперсия.</li>
+    <li><span class="accent">Loading</span> — Вес признака в главной компоненте (координата признака в векторе компоненты).</li>
+    <li><span class="accent">Score</span> — Координата наблюдения в пространстве главных компонент.</li>
+    <li><span class="accent">Scree plot</span> — График собственных значений или доли объяснённой дисперсии
+      (<a href="https://esl.hohoweiya.xyz/book/The%20Elements%20of%20Statistical%20Learning.pdf" target="_blank">ESL</a>). [web:17]
+    </li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ТЕРМИНЫ И СОКРАЩЕНИЯ (2)
+=============================================================== -->
+<section>
+  <h3>Термины и сокращения (2)</h3>
+  <ul class="small">
+    <li><span class="accent">SVD</span> — Singular Value Decomposition (сингулярное разложение матрицы).[web:17]</li>
+    <li><span class="accent">Covariance matrix</span> — Ковариационная матрица.</li>
+    <li><span class="accent">Correlation matrix</span> — Корреляционная матрица.</li>
+    <li><span class="accent">High-dimensional data</span> — Высокомерные данные (часто \(p \gg n\)).[web:17]</li>
+    <li><span class="accent">Dimensionality reduction</span> — Снижение размерности.</li>
+    <li><span class="accent">Kernel PCA</span> — Kernel Principal Component Analysis (ядерный анализ главных компонент).[web:17]</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ТЕРМИНЫ И СОКРАЩЕНИЯ (3)
+=============================================================== -->
+<section>
+  <h3>Термины и сокращения (3)</h3>
+  <ul class="small">
+    <li><span class="accent">Probabilistic PCA (PPCA)</span> — Probabilistic Principal Component Analysis (вероятностный анализ главных компонент).[web:17]</li>
+    <li><span class="accent">Sparse PCA</span> — Sparse Principal Component Analysis (разреженный анализ главных компонент).[web:31]</li>
+    <li><span class="accent">Q1 journal</span> — Журнал первого квартиля по рейтингу (impact‑фактор, квартиль).</li>
+    <li><span class="accent">Eigenvalue / eigenvector</span> — Собственное значение / собственный вектор.</li>
+    <li><span class="accent">Gradient descent</span> — Градиентный спуск; <span class="accent">gradient flow</span> — градиентный поток.</li>
+    <li><span class="accent">Separatrix</span> — Separatrix (сепаратриса, траектория, разделяющая области фазового пространства).</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ИНТЕРАКТИВНОСТЬ / ТРЕНДЫ ПРЕЗЕНТАЦИЙ
+=============================================================== -->
+<section>
+  <h3>Интерактивность и тренды презентаций</h3>
+  <ul class="small">
+    <li>Используем HTML‑фреймворк <span class="accent">reveal.js</span> для пошагового появления формул и примеров
+      (<a href="https://revealjs.com" target="_blank">reveal.js</a>). [web:22][web:34]
+    </li>
+    <li>Интерактивные демо в Colab (слайд содержит ссылку + краткий код)
+      (<a href="https://www.geeksforgeeks.org/machine-learning/how-to-install-sklearn-in-colab/" target="_blank">пример</a>). [web:21]
+    </li>
+    <li>Мини‑опросы: «какой признак доминирует в PCA без нормировки?»</li>
+    <li>Связь с реальными статьями: каждый тематический блок — слайд с 1–2 ключевыми публикациями
+      (например,
+      <a href="https://www.semanticscholar.org/paper/Principal-component-analysis:-a-review-and-recent-Jolliffe-Cadima/5bc875d65df812f9617d8ba5" target="_blank">
+        Jolliffe & Cadima
+      </a>). [web:31]
+    </li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     СЛАЙД: ДОМАШНЕЕ ЗАДАНИЕ ПОСЛЕ ЛЕКЦИЙ 1–2
+=============================================================== -->
+<section>
+  <h3>Домашнее задание после лекций 1–2</h3>
+  <ul class="small">
+    <li>Выбрать небольшой dataset (до 10 признаков) и реализовать PCA «вручную» и через scikit‑learn
+      (<a href="https://www.geeksforgeeks.org/machine-learning/how-to-install-sklearn-in-colab/" target="_blank">Colab + sklearn</a>). [web:21]
+    </li>
+    <li>Построить scree‑plot и biplot для первых двух компонент.</li>
+    <li>Написать мини‑отчёт (1–2 страницы) с интерпретацией компонент (рус/англ‑термины из словаря).</li>
+    <li>Подумать, как выбранный dataset можно развить до статьи уровня Q1 (доп. признаки, сравнение методов)
+      (ориентир —
+      <a href="https://people.math.harvard.edu/~aseigal/fall23_syllabus.pdf" target="_blank">
+        курсы и проекты Harvard
+      </a>,
+      <a href="https://www.semanticscholar.org/paper/Principal-component-analysis:-a-review-and-recent-Jolliffe-Cadima/5bc875d65df812f9617d8ba5" target="_blank">
+        обзор Jolliffe & Cadima
+      </a>). [web:19][web:31]
+    </li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     ЗАКЛЮЧИТЕЛЬНЫЙ СЛАЙД
+=============================================================== -->
+<section>
+  <h3>Дальше</h3>
+  <ul>
+    <li>Следующие лекции: строгий вывод оптимизационной постановки и детальный разбор SVD.[web:14][web:17]</li>
+    <li>Практики: NumPy‑реализация PCA, сравнительный анализ с scikit‑learn
+      (<a href="https://www.geeksforgeeks.org/machine-learning/how-to-install-sklearn-in-colab/" target="_blank">Colab</a>). [web:21]
+    </li>
+    <li>Подбор датасетов для будущих проектов и потенциальных статей (ориентируясь на литературу ESL и Jolliffe & Cadima).[web:17][web:31]</li>
+  </ul>
+  <p class="small">
+    Библиография и дополнительные материалы будут доступны в общем репозитории курса
+    (Smith, ESL, Jolliffe & Cadima, OpenCV, MIT OCW и др.).[web:14][web:17][web:31]
+  </p>
+</section>
+
+
+<section>
+  <h4>1. Реализовать PCA «вручную»</h4>
+  <pre class="code"><code>
+import numpy as np
+
+
+x = np.arange(-5, 5)
+y = 2 * x + np.random.randn(10) * 3
+X = np.column_stack((x, y))
+
+m, n = X.shape
+
+middle_X = []
+for col in range(n):
+    middle_X += [X[:, col].sum() / m]
+
+middle_X = np.array(middle_X)
+X_ = X - middle_X
+
+
+cov = (X_.T @ X_) / m
+N, V = np.linalg.eigh(cov)
+
+
+Z = X_ @ V[:, N.argsort()[::-1]]
+  </code></pre>
+</section>
+
+<section>
+  <h4>1. Реализовать PCA через scikit‑learn</h4>
+  <pre class="code"><code>
+from sklearn.decomposition import PCA
+
+
+pca = PCA(n_components=n)
+Z = pca.fit_transform(X)
+  </code></pre>
+</section>
+
+<section>
+  <h4>2. Сравнение результатов</h4>
+  <div style="display: flex; gap: 20px; justify-content: center;">
+    <div>
+       <img src="img/manual.png">   
+    </div>
+    <div>
+      <img src="img/sklearn.png">
+    </div>
+    <div>
+      <img src="img/original_data.png" style="width: 500px;">
+    </div>
+  </div>
+
+  <p class="small">
+    Как можно заметить, результаты по значениям идентичны, но отличаются в знаках. 
+    Возникает это из-за того, что в sklearn используется SVD, когда в нашем случает (т.е. ручном)
+    находим собственные числа и вектора. 
+    Следовательно, это не является ошибкой!
+  </p>
+</section>
+
+<section>
+  <h4>3. Построить scree-plot и biplot</h4>
+  <div style="display: flex; gap: 20px; justify-content: center;">
+    <div>
+       <img src="img/scree-plot.png">   
+    </div>
+    <div>
+      <img src="img/biplot.png">
+    </div>
+  </div>
+</section>
+
+</div>
+</div>
+
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: true,
+    transition: 'fade',
+    width: 1280,
+    height: 720,
+    mathjax3: {
+      mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
+      tex: {
+        inlineMath: [ ['\\(', '\\)'] ],
+        displayMath: [ ['\\[', '\\]'] ]
+      },
+      options: {
+        skipHtmlTags: [ 'script', 'noscript', 'style', 'textarea', 'pre', 'code' ]
+      }
+    },
+    plugins: [ RevealMath.MathJax3 ]
+  });
+</script>
+</body>
+</html>
