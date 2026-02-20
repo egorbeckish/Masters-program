@@ -106,6 +106,7 @@ if __name__ == "__main__":
 	    {"ab": (2, 5), "N": 10 ** 4, "f": lambda x: x / 3, "f_text": "x/3", "manual_result": 3.5},
     ]
 
+    os.makedirs("results", exist_ok=True)
     for parametrs in data:
         obj = MonteCarlo(**parametrs)
         result = obj.estimate
@@ -119,5 +120,5 @@ if __name__ == "__main__":
             f"Погрешность: {abs(result - parametrs["manual_result"])} (+-{result / parametrs["manual_result"]} %)",
             "-" * 70,
             sep="\n",
-            file=open(f"{os.path.dirname(__file__)}/results/montecarlo.txt", "a", encoding="utf-8")
+            file=open("results/montecarlo.txt", "a", encoding="utf-8")
         )
