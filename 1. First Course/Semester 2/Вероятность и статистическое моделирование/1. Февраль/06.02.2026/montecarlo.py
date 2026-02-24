@@ -120,5 +120,5 @@ if __name__ == "__main__":
             f"Погрешность: {abs(result - parametrs["manual_result"])} (+-{result / parametrs["manual_result"]} %)",
             "-" * 70,
             sep="\n",
-            file=open("results/montecarlo.txt", "a", encoding="utf-8")
+            file=open(f"{os.path.dirname(__file__)}/results/montecarlo.txt", "a", encoding="utf-8")
         )
