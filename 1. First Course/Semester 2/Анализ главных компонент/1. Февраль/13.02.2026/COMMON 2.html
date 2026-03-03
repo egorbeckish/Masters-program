@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>PCA — Практики 1–4 с упражнениями</title>
+
+  <!-- Reveal.js -->
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/theme/white.css" id="theme">
+
+  <!-- Reveal.js core + Math plugin -->
+  <script src="https://unpkg.com/reveal.js/dist/reveal.js"></script>
+  <script src="https://unpkg.com/reveal.js/plugin/math/math.js"></script>
+
+  <style>
+    .accent { color:#007acc; font-weight:bold; }
+    .small { font-size:0.8em; }
+    .code { font-family: "Fira Code", "Consolas", monospace; font-size:0.8em; }
+    .two-col { display:flex; gap:2rem; align-items:flex-start; }
+    .two-col > div { flex:1; }
+    .en { color:#555; font-style:italic; }
+    .exercise { border-left: 4px solid #007acc; padding-left: 10px; margin-bottom: 10px; }
+    .solution { border-left: 4px solid #00aa55; padding-left: 10px; margin-top: 5px; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ============================================================
+     ТИТУЛЬНЫЙ СЛАЙД ПРАКТИК
+=============================================================== -->
+<section>
+  <h2>PCA — Практические занятия 1–4</h2>
+  <p class="small">
+    <span class="accent">PCA</span> — Principal Component Analysis (анализ главных компонент).
+  </p>
+  <p>Фокус: от первых ручных реализаций до визуализации и кластеризации.</p>
+  <p class="small">
+    Инструменты: Python, NumPy, scikit‑learn, Google Colab, matplotlib/plotly.<br>
+    Примеры: 
+    <a href="https://scikit-learn.org/stable/auto_examples/decomposition/plot_pca_iris.html" target="_blank">PCA на Iris (sklearn)</a>,
+    <a href="https://www.kaggle.com/code/kelixirr/pca-examples-implementation-using-numpy-sklearn" target="_blank">PCA в NumPy &amp; sklearn (Kaggle)</a>.
+  </p>
+</section>
+
+<!-- ============================================================
+     СТРУКТУРА ПРАКТИК 1–4
+=============================================================== -->
+<section>
+  <h3>Структура практик 1–4</h3>
+  <ul>
+    <li><span class="accent">Практика 1:</span> Разведочный анализ (EDA), выбор датасетов, постановка задач.</li>
+    <li><span class="accent">Практика 2:</span> Реализация PCA «с нуля» в NumPy + сравнение с scikit‑learn (<a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" target="_blank">документация PCA</a>).</li>
+    <li><span class="accent">Практика 3:</span> Explained variance, scree‑plot, biplot, интерпретация компонент (<a href="https://scikit-learn.org/stable/auto_examples/decomposition/plot_pca_iris.html" target="_blank">пример Iris</a>, <a href="https://okomestudio.net/biboroku/2014/04/pca-and-biplot-using-python/" target="_blank">PCA &amp; biplot</a>).</li>
+    <li><span class="accent">Практика 4:</span> PCA для визуализации и кластеризации (k‑means на PC‑пространстве; пример: <a href="https://www.kaggle.com/code/sabanasimbutt/clustering-visualization-of-clusters-using-pca" target="_blank">Kaggle: Clustering &amp; PCA</a>).</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     НАПОМИНАНИЕ ТЕРМИНОВ
+=============================================================== -->
+<section>
+  <h3>Напоминание терминов</h3>
+  <ul class="small">
+    <li><span class="accent">PCA</span> — Principal Component Analysis (анализ главных компонент).</li>
+    <li><span class="accent">PC</span> — Principal Component (главная компонента, вектор в пространстве признаков).</li>
+    <li><span class="accent">Scores</span> — координаты объектов в пространстве главных компонент.</li>
+    <li><span class="accent">Loadings</span> — веса признаков в компонентах (координаты признаков в векторе компоненты).</li>
+    <li><span class="accent">Explained variance</span> — доля дисперсии, объяснённая компонентой.</li>
+    <li><span class="accent">Scree‑plot</span> — график собственных значений / долей объяснённой дисперсии.</li>
+    <li><span class="accent">Biplot</span> — совмещение scores и loadings на одном графике.</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 1: ЦЕЛИ
+=============================================================== -->
+<section>
+  <h3>Практика 1: цели</h3>
+  <ul>
+    <li>Освоить EDA (Exploratory Data Analysis) перед PCA.</li>
+    <li>Познакомиться с 2–3 реальными датасетами (Iris, цифры, кредитные данные).</li>
+    <li>Сформулировать гипотезы для PCA.</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 1: EDA НА IRIS
+=============================================================== -->
+<section>
+  <h3>Практика 1: EDA на Iris</h3>
+  <pre class="code"><code>
+from sklearn.datasets import load_iris
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+iris = load_iris()
+X = iris["data"]
+y = iris["target"]
+feature_names = iris["feature_names"]
+
+df = pd.DataFrame(X, columns=feature_names)
+df["species"] = pd.Categorical.from_codes(y, iris["target_names"])
+
+sns.pairplot(df, hue="species")
+plt.show()
+  </code></pre>
+  <p class="small">
+    Официальный пример: 
+    <a href="https://scikit-learn.org/stable/auto_examples/decomposition/plot_pca_iris.html" target="_blank">
+      sklearn: PCA на Iris
+    </a>.
+  </p>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 1: УПРАЖНЕНИЕ 1
+=============================================================== -->
+<section>
+  <h3>Практика 1: упражнение 1 (корреляции)</h3>
+  <div class="exercise small">
+    <p><b>Задание.</b> Для датасета Iris:</p>
+    <ul>
+      <li>Вычислите матрицу корреляций признаков.</li>
+      <li>Найдите пару признаков с наибольшей по модулю корреляцией.</li>
+      <li>Объясните, почему PCA, вероятно, «объединит» информацию этих признаков в одну компоненту.</li>
+    </ul>
+  </div>
+  <div class="solution small">
+    <p><b>Решение (набросок).</b></p>
+    <pre class="code"><code>
+corr = df[feature_names].corr()
+print(corr)
+    </code></pre>
+    <ul>
+      <li>Обычно максимальная корреляция — между длиной и шириной лепестка (petal length/width).</li>
+      <li>Точки в признаковом пространстве лежат вдоль вытянутого эллипса.</li>
+      <li>Первая главная компонента будет ориентирована вдоль этого направления, захватывая общую вариацию двух признаков.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 1: УПРАЖНЕНИЕ 2
+=============================================================== -->
+<section>
+  <h3>Практика 1: упражнение 2 (свой датасет)</h3>
+  <div class="exercise small">
+    <p><b>Задание.</b></p>
+    <ul>
+      <li>Выберите небольшой табличный датасет (4–10 числовых признаков).</li>
+      <li>Постройте описательные статистики и матрицу корреляций.</li>
+      <li>Сделайте парные диаграммы (pairplot).</li>
+      <li>Сформулируйте 1–2 гипотезы о возможных главных направлениях вариации.</li>
+    </ul>
+  </div>
+  <div class="solution small">
+    <p><b>Возможное решение.</b></p>
+    <ul>
+      <li>Код аналогичен примеру с Iris: <span class="code">pd.DataFrame</span>, <span class="code">describe()</span>, <span class="code">corr()</span>, <span class="code">sns.pairplot</span>.</li>
+      <li>Гипотезы: «общий размер», «платёжеспособность», «интенсивность потребления» и т.п.</li>
+      <li>Затем эти гипотезы проверяются и уточняются через PCA.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 2: ЦЕЛИ
+=============================================================== -->
+<section>
+  <h3>Практика 2: цели</h3>
+  <ul>
+    <li>Реализовать PCA «с нуля» через ковариационную матрицу и собственные значения.</li>
+    <li>Сравнить с <span class="code">sklearn.decomposition.PCA</span> (официальная реализация).</li>
+    <li>Понять связь формул с тем, что делает библиотека.</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 2: МАТЕМАТИКА
+=============================================================== -->
+<section>
+  <h3>Практика 2: математика PCA</h3>
+  <ul class="small">
+    <li>Данные: \(X \in \mathbb{R}^{n \times p}\), строки — объекты, столбцы — признаки.</li>
+    <li>Центрированные данные:
+      \[
+        \tilde{X}_{ij} = X_{ij} - \bar{X}_{\cdot j},
+      \]
+      где \(\bar{X}_{\cdot j}\) — среднее по признаку \(j\).
+    </li>
+    <li>Ковариационная матрица:
+      \[
+        S = \frac{1}{n-1}\tilde{X}^\top \tilde{X}.
+      \]
+    </li>
+    <li>Собственные значения/векторы:
+      \[
+        S w_k = \lambda_k w_k,\ \lambda_1 \ge \dots \ge \lambda_p.
+      \]
+    </li>
+    <li>Scores (координаты объектов): \(Z = \tilde{X} W\), где \(W = [w_1,\dots,w_p].\)</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 2: КОД NUMPY PCA
+=============================================================== -->
+<section>
+  <h3>Практика 2: NumPy PCA (Iris)</h3>
+  <pre class="code"><code>
+import numpy as np
+from sklearn.datasets import load_iris
+
+iris = load_iris()
+X = iris["data"]
+y = iris["target"]
+
+# 1. Центрирование
+Xc = X - X.mean(axis=0, keepdims=True)
+
+# 2. Ковариационная матрица
+S = Xc.T @ Xc / (Xc.shape[0] - 1)
+
+# 3. Собственные значения/векторы
+eigvals, eigvecs = np.linalg.eigh(S)
+idx = np.argsort(eigvals)[::-1]
+eigvals = eigvals[idx]
+eigvecs = eigvecs[:, idx]
+
+# 4. Scores (проекции) на первые 2 компоненты
+Z = Xc @ eigvecs[:, :2]
+  </code></pre>
+  <p class="small">
+    Сравните с официальным примером:
+    <a href="https://scikit-learn.org/stable/auto_examples/decomposition/plot_pca_iris.html" target="_blank">
+      PCA на Iris (sklearn)
+    </a>.
+  </p>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 2: СРАВНЕНИЕ СО SKLEARN
+=============================================================== -->
+<section>
+  <h3>Практика 2: сравнение с sklearn.PCA</h3>
+  <pre class="code"><code>
+from sklearn.decomposition import PCA
+
+pca = PCA(n_components=2)
+Z_skl = pca.fit_transform(X)
+
+print(np.corrcoef(Z[:, 0], Z_skl[:, 0])[0, 1])
+print(np.corrcoef(Z[:, 1], Z_skl[:, 1])[0, 1])
+  </code></pre>
+  <p class="small">
+    Пространства совпадают с точностью до знака и возможного вращения; смотрите документацию
+    <a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" target="_blank">
+      sklearn.decomposition.PCA
+    </a>.
+  </p>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 2: УПРАЖНЕНИЕ 1 (РУЧНОЙ 2D)
+=============================================================== -->
+<section>
+  <h3>Практика 2: упражнение 1 (2D‑пример)</h3>
+  <div class="exercise small">
+    <p><b>Задание.</b> Рассмотрите точки в \(\mathbb{R}^2\):</p>
+    <ul>
+      <li>\(x_1 = (1, 2)\), \(x_2 = (2, 3)\), \(x_3 = (3, 4)\).</li>
+      <li>1) Центрируйте данные.</li>
+      <li>2) Вычислите ковариационную матрицу \(S\).</li>
+      <li>3) Найдите собственные значения/векторы.</li>
+      <li>4) Определите первую главную компоненту.</li>
+    </ul>
+  </div>
+  <div class="solution small">
+    <p><b>Решение (вручную).</b></p>
+    <ul>
+      <li>\(\bar{x} = (2,3)\). Центрированные точки: \((-1,-1), (0,0), (1,1)\).</li>
+      <li>\(\tilde{X} = \begin{pmatrix}-1 & -1\\ 0 & 0\\ 1 & 1\end{pmatrix}\).</li>
+      <li>\(S = \frac{1}{2}\tilde{X}^\top \tilde{X} = \begin{pmatrix}1 & 1\\ 1 & 1\end{pmatrix}.\)</li>
+      <li>Собственные значения: \(\lambda_1 = 2, \lambda_2 = 0\), векторы: \(w_1 \propto (1,1)\), \(w_2 \propto (1,-1)\).</li>
+      <li>Первая PC — направление \((1,1)\), вдоль которого лежат точки.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 2: УПРАЖНЕНИЕ 2 (ЧИСЛА SKLEARN)
+=============================================================== -->
+<section>
+  <h3>Практика 2: упражнение 2 (числовое сравнение)</h3>
+  <div class="exercise small">
+    <p><b>Задание.</b></p>
+    <ul>
+      <li>На Iris сравните <span class="code">eigvals</span> и <span class="code">pca_full.explained_variance_</span>.</li>
+      <li>Оцените абсолютные и относительные расхождения.</li>
+      <li>Объясните, откуда берутся небольшие численные отличия.</li>
+    </ul>
+  </div>
+  <div class="solution small">
+    <p><b>Решение.</b></p>
+    <pre class="code"><code>
+pca_full = PCA(n_components=X.shape[1]).fit(X)
+print(eigvals)
+print(pca_full.explained_variance_)
+print(eigvals - pca_full.explained_variance_)
+    </code></pre>
+    <ul>
+      <li>Различия, как правило, порядка машинной точности.</li>
+      <li>Причины: использование SVD, особенности численных алгоритмов и округления.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 3: ЦЕЛИ
+=============================================================== -->
+<section>
+  <h3>Практика 3: цели</h3>
+  <ul>
+    <li>Понять explained variance и выбор числа компонент.</li>
+    <li>Научиться строить scree‑plot и cumulative EVR.</li>
+    <li>Сделать biplot и интерпретировать компоненты (пример: <a href="https://okomestudio.net/biboroku/2014/04/pca-and-biplot-using-python/" target="_blank">Okome Studio</a>, <a href="https://insidelearningmachines.com/biplot/" target="_blank">Inside Learning Machines</a>).</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 3: EXPLAINED VARIANCE
+=============================================================== -->
+<section>
+  <h3>Explained variance: формулы</h3>
+  <ul class="small">
+    <li>Собственные значения: \(\lambda_1 \ge \dots \ge \lambda_p\).</li>
+    <li>Общая дисперсия:
+      \[
+        \text{TotalVar} = \sum_{i=1}^p \lambda_i.
+      \]
+    </li>
+    <li>Доля объяснённой дисперсии:
+      \[
+        \text{EVR}_k = \frac{\sum_{i=1}^k \lambda_i}{\sum_{i=1}^p \lambda_i}.
+      \]
+    </li>
+    <li>Scree‑plot — график \(\lambda_i\) или \(\text{EVR}_k\) по \(i\), поиск «колена» кривой.</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 3: SCREE‑PLOT КОД
+=============================================================== -->
+<section>
+  <h3>Практика 3: scree‑plot (Iris)</h3>
+  <pre class="code"><code>
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.datasets import load_iris
+
+iris = load_iris()
+X = iris["data"]
+
+pca_full = PCA(n_components=X.shape[1])
+pca_full.fit(X)
+
+eigvals = pca_full.explained_variance_
+evr = pca_full.explained_variance_ratio_
+cum_evr = evr.cumsum()
+
+fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+
+ax[0].plot(range(1, len(eigvals)+1), eigvals, marker='o')
+ax[0].set_xlabel('Компонента')
+ax[0].set_ylabel('Собственное значение')
+ax[0].set_title('Scree-plot')
+
+ax[1].plot(range(1, len(cum_evr)+1), cum_evr, marker='o')
+ax[1].set_xlabel('k')
+ax[1].set_ylabel('Кумулятивная доля дисперсии')
+ax[1].set_title('Cumulative EVR')
+
+plt.tight_layout()
+plt.show()
+  </code></pre>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 3: УПРАЖНЕНИЕ 1 (ВЫБОР k)
+=============================================================== -->
+<section>
+  <h3>Практика 3: упражнение 1 (выбор k)</h3>
+  <div class="exercise small">
+    <p><b>Задание.</b></p>
+    <ul>
+      <li>По графику cumulative EVR для Iris найдите минимальное \(k\), при котором EVR ≥ 90%.</li>
+      <li>Найдите минимальное \(k\) для EVR ≥ 95%.</li>
+      <li>Сравните с визуальной точкой излома scree‑plot.</li>
+    </ul>
+  </div>
+  <div class="solution small">
+    <p><b>Решение.</b></p>
+    <ul>
+      <li>Для Iris обычно EVR\(_2\) ≈ 0.95 (точное значение вычисляется в коде).</li>
+      <li>Таким образом, \(k=2\) достаточно и для визуализации, и для объяснения большей части дисперсии.</li>
+      <li>«Колено» scree‑plot также часто около 2‑й компоненты.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 3: BIPLOT КОД
+=============================================================== -->
+<section>
+  <h3>Практика 3: biplot (Iris)</h3>
+  <pre class="code"><code>
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.datasets import load_iris
+
+iris = load_iris()
+X = iris["data"]
+y = iris["target"]
+features = iris["feature_names"]
+
+Xc = X - X.mean(axis=0, keepdims=True)
+pca = PCA(n_components=2)
+Z = pca.fit_transform(Xc)
+W = pca.components_.T
+
+plt.figure(figsize=(7, 7))
+plt.scatter(Z[:, 0], Z[:, 1], c=y, cmap='viridis', alpha=0.7)
+
+for i, f in enumerate(features):
+    plt.arrow(0, 0, W[i, 0]*3, W[i, 1]*3, color='r', head_width=0.05)
+    plt.text(W[i, 0]*3.2, W[i, 1]*3.2, f, color='r')
+
+plt.xlabel("PC1")
+plt.ylabel("PC2")
+plt.axhline(0, color='grey', linewidth=0.5)
+plt.axvline(0, color='grey', linewidth=0.5)
+plt.title("PCA Biplot (Iris)")
+plt.grid(True, alpha=0.2)
+plt.show()
+  </code></pre>
+  <p class="small">
+    Подробнее: 
+    <a href="https://okomestudio.net/biboroku/2014/04/pca-and-biplot-using-python/" target="_blank">PCA &amp; Biplot in Python</a>,
+    <a href="https://insidelearningmachines.com/biplot/" target="_blank">Guide to PCA Biplot</a>.
+  </p>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 3: УПРАЖНЕНИЕ 2 (ИНТЕРПРЕТАЦИЯ BIPLOT)
+=============================================================== -->
+<section>
+  <h3>Практика 3: упражнение 2 (интерпретация biplot)</h3>
+  <div class="exercise small">
+    <p><b>Задание.</b></p>
+    <ul>
+      <li>По biplot для Iris:</li>
+      <li>a) Какие признаки дают наибольший вклад в PC1?</li>
+      <li>b) Какие — в PC2?</li>
+      <li>c) Как интерпретировать PC1 и PC2 с точки зрения биологии цветка?</li>
+    </ul>
+  </div>
+  <div class="solution small">
+    <p><b>Типичное решение.</b></p>
+    <ul>
+      <li>PC1 сильно связан с признаками лепестка (petal length/width) — «размер лепестков».</li>
+      <li>PC2 — с признаками чашелистика (sepal) — «пропорции чашелистик/лепесток».</li>
+      <li>Таким образом, PC1 ≈ общий размер, PC2 ≈ форма.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 4: ЦЕЛИ
+=============================================================== -->
+<section>
+  <h3>Практика 4: цели</h3>
+  <ul>
+    <li>Использовать PCA как предварительный шаг к кластеризации.</li>
+    <li>Визуализировать кластеры в пространстве первых компонент.</li>
+    <li>Сравнить результаты до и после PCA.</li>
+  </ul>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 4: PCA + K-MEANS (IRIS)
+=============================================================== -->
+<section>
+  <h3>Практика 4: PCA + k‑means (Iris)</h3>
+  <pre class="code"><code>
+from sklearn.datasets import load_iris
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+
+iris = load_iris()
+X = iris["data"]
+y = iris["target"]
+
+pca = PCA(n_components=2)
+Z = pca.fit_transform(X)
+
+kmeans = KMeans(n_clusters=3, random_state=42, n_init="auto")
+labels = kmeans.fit_predict(Z)
+
+plt.figure(figsize=(6, 6))
+plt.scatter(Z[:, 0], Z[:, 1], c=labels, cmap='viridis', alpha=0.8)
+plt.xlabel("PC1")
+plt.ylabel("PC2")
+plt.title("k-means в пространстве PC1–PC2 (Iris)")
+plt.show()
+  </code></pre>
+  <p class="small">
+    Для аналогичных примеров см. обсуждения и ноутбуки на Kaggle / форумах по Python.
+  </p>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 4: УПРАЖНЕНИЕ 1 (CONFUSION MATRIX)
+=============================================================== -->
+<section>
+  <h3>Практика 4: упражнение 1 (сравнение кластеров)</h3>
+  <div class="exercise small">
+    <p><b>Задание.</b></p>
+    <ul>
+      <li>Сравните результаты k‑means с истинными метками Iris (виды цветов).</li>
+      <li>Постройте confusion matrix.</li>
+      <li>Опишите, какие виды лучше всего соответствуют кластерам.</li>
+    </ul>
+  </div>
+  <div class="solution small">
+    <p><b>Решение.</b></p>
+    <pre class="code"><code>
+from sklearn.metrics import confusion_matrix
+
+cm = confusion_matrix(y, labels)
+print(cm)
+    </code></pre>
+    <ul>
+      <li>Обычно Setosa отделяется практически идеально.</li>
+      <li>Versicolor и Virginica частично смешиваются — это видно и на biplot.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     ПРАКТИКА 4: УПРАЖНЕНИЕ 2 (КРЕДИТНЫЕ ДАННЫЕ)
+=============================================================== -->
+<section>
+  <h3>Практика 4: упражнение 2 (credit cards / свой датасет)</h3>
+  <div class="exercise small">
+    <p><b>Задание.</b></p>
+    <ul>
+      <li>Возьмите датасет с большим числом признаков (например, credit‑card clustering на Kaggle).</li>
+      <li>Стандартизируйте признаки (StandardScaler), сделайте PCA до 2–3 компонент.</li>
+      <li>Запустите k‑means (3–5 кластеров) в пространстве компонент.</li>
+      <li>Для каждого кластера посчитайте средние значения исходных признаков и опишите кластеры в словах.</li>
+    </ul>
+  </div>
+  <div class="solution small">
+    <p><b>Возможное решение.</b></p>
+    <ul>
+      <li>Шаблон есть в ноутбуке:
+        <a href="https://www.kaggle.com/code/sabanasimbutt/clustering-visualization-of-clusters-using-pca" target="_blank">
+          Clustering &amp; Visualization of Clusters using PCA
+        </a>.
+      </li>
+      <li>Интерпретации: «высокоактивные клиенты», «редко пользующиеся», «потенциально рискованные» и т.п.</li>
+      <li>Это уже основа для исследовательской работы и статьи.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============================================================
+     ИТОГ ПО ПРАКТИКАМ С УПРАЖНЕНИЯМИ
+=============================================================== -->
+<section>
+  <h3>Итог: практики 1–4</h3>
+  <ul class="small">
+    <li>Практика 1: EDA, корреляции, выбор и понимание датасетов.</li>
+    <li>Практика 2: ручной PCA + сверка со scikit‑learn.</li>
+    <li>Практика 3: объяснённая дисперсия, scree‑plot, biplot, интерпретация компонент.</li>
+    <li>Практика 4: PCA как подготовка к кластеризации (k‑means), визуализация и анализ кластеров.</li>
+    <li>Упражнения с решениями дают магистрантам шаблоны для собственных исследовательских проектов.</li>
+  </ul>
+</section>
+
+</div>
+</div>
+
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: true,
+    transition: 'fade',
+    width: 1280,
+    height: 720,
+    mathjax3: {
+      mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
+      tex: {
+        inlineMath: [ ['\\(', '\\)'] ],
+        displayMath: [ ['\\[', '\\]'] ]
+      },
+      options: {
+        skipHtmlTags: [ 'script', 'noscript', 'style', 'textarea', 'pre', 'code' ]
+      }
+    },
+    plugins: [ RevealMath.MathJax3 ]
+  });
+</script>
+</body>
+</html>

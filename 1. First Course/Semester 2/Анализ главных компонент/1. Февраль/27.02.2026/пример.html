@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>PCA в физическом эксперименте: печь / реактор</title>
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- Reveal.js core CSS -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <!-- Theme -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css"
+        id="theme">
+
+  <style>
+    .reveal section {
+      font-size: 26px;
+      line-height: 1.35;
+    }
+    .term {
+      color: #ffd166;
+      font-weight: 600;
+    }
+    table.simple {
+      border-collapse: collapse;
+      margin: 0 auto;
+      font-size: 22px;
+    }
+    table.simple th, table.simple td {
+      border: 1px solid #ccc;
+      padding: 4px 10px;
+      text-align: center;
+    }
+    .small {
+      font-size: 20px;
+    }
+    .code {
+      font-family: "Fira Code", "Consolas", monospace;
+      font-size: 20px;
+      background: #111;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    textarea {
+      font-family: "Fira Code", "Consolas", monospace;
+    }
+    a {
+      color: #8ecafc;
+    }
+  </style>
+
+  <!-- MathJax (если захотите добавить формулы) -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <!-- ===================== ТИТУЛЬНЫЙ ===================== -->
+    <section>
+      <h2>PCA в физическом эксперименте</h2>
+      <h3>Лабораторная печь / реактор</h3>
+      <p>От простого 2D до многомерного анализа</p>
+      <p class="small">
+        Напоминание: <span class="term">PCA</span> — Principal Component Analysis (анализ главных компонент);
+        <span class="term">feature</span> — признак (датчик); <span class="term">sample</span> — наблюдение (замер во времени);
+        <span class="term">eigenvalue</span> — собственное значение; <span class="term">eigenvector</span> — собственный вектор;
+        <span class="term">explained variance</span> — объяснённая дисперсия.
+      </p>
+    </section>
+
+    <!-- ======================================================
+         ЧАСТЬ 1. ИГРУШЕЧНЫЙ ПРИМЕР (2 ДАТЧИКА)
+         ====================================================== -->
+    <section>
+      <h2>Часть 1</h2>
+      <h3>Простой пример: 2 датчика в печи</h3>
+      <p class="small">
+        Представим, что у нас есть печь, в которой идёт нагрев образца.
+        Два датчика измеряют температуру в двух точках: T1 и T2.
+      </p>
+    </section>
+
+    <section>
+      <h3>Данные T1–T2 (идеальный случай)</h3>
+      <p class="small">
+        В идеале печь хорошо отрегулирована, и T1, T2 растут почти линейно вместе
+        (растёт мощность нагрева).
+      </p>
+      <table class="simple">
+        <tr><th>Номер замера</th><th>T1, °C</th><th>T2, °C</th></tr>
+        <tr><td>1</td><td>100</td><td>102</td></tr>
+        <tr><td>2</td><td>120</td><td>121</td></tr>
+        <tr><td>3</td><td>140</td><td>139</td></tr>
+        <tr><td>4</td><td>160</td><td>161</td></tr>
+        <tr><td>5</td><td>180</td><td>179</td></tr>
+        <tr><td>6</td><td>200</td><td>201</td></tr>
+      </table>
+      <p class="small">
+        Геометрически точки (T1, T2) лежат вдоль диагонали T2 ≈ T1.
+        Первая главная компонента даёт «общий уровень температуры», вторая — мелкие различия между датчиками.
+      </p>
+    </section>
+
+    <section>
+      <h3>Интерпретация PCA (T1–T2)</h3>
+      <ul class="small">
+        <li><span class="term">PC1</span> (первая главная компонента): примерно (1/√2, 1/√2). Это общая температура печи.</li>
+        <li><span class="term">PC2</span> (вторая компонентa): примерно (1/√2, −1/√2). Это «перекос» между датчиками (неоднородность).</li>
+        <li>Собственные значения: λ₁ ≫ λ₂, значит почти вся дисперсия находится вдоль PC1 (общий нагрев).</li>
+      </ul>
+      <p class="small">
+        Практический смысл: можно заменить пару T1, T2 одним параметром PC1 и отдельно мониторить PC2
+        как индикатор нарушения однородности поля температур.
+      </p>
+    </section>
+
+    <section>
+      <h3>Калькулятор PCA: T1–T2</h3>
+      <p class="small">
+        Введите данные T1, T2 (строка — замер).
+      </p>
+      <textarea id="pca-input-phys-1" style="width:100%; height:180px;">
+100 102
+120 121
+140 139
+160 161
+180 179
+200 201
+      </textarea>
+      <p class="small">
+        <label>
+          <input type="checkbox" id="pca-standardize-phys-1" checked>
+          Стандартизировать T1, T2 (чтобы работали в одинаковом масштабе)
+        </label>
+      </p>
+      <p class="small">
+        <button id="pca-run-btn-phys-1">
+          PCA → общая температура (PC1) и перекос датчиков (PC2)
+        </button>
+      </p>
+      <div id="pca-output-phys-1" class="small"
+           style="background:#111; padding:10px; border-radius:5px; white-space:pre-wrap;"></div>
+    </section>
+
+    <!-- ======================================================
+         ЧАСТЬ 2. МНОГО ДАТЧИКОВ (РЕАЛИСТИЧЕСКИЙ РЕЖИМ)
+         ====================================================== -->
+    <section>
+      <h2>Часть 2</h2>
+      <h3>Печь с несколькими датчиками</h3>
+      <p class="small">
+        Более реалистичный сценарий: у нас есть экспериментальная печь/реактор с несколькими датчиками:
+      </p>
+      <ul class="small">
+        <li>F1 — температура в зоне 1 (T₁).</li>
+        <li>F2 — температура в зоне 2 (T₂).</li>
+        <li>F3 — давление в камере (P).</li>
+        <li>F4 — расход газа (Q).</li>
+        <li>F5 — относительная влажность / доля пара (H).</li>
+      </ul>
+      <p class="small">
+        За время эксперимента мы снимаем показания с частотой, скажем, раз в минуту. Одна строка — один момент времени.
+      </p>
+    </section>
+
+    <section>
+      <h3>Игрушечный набор данных F1–F5</h3>
+      <p class="small">
+        Ниже — условный пример 8 замеров в режиме «почти стационарный нагрев» с небольшой вариацией.
+      </p>
+      <pre class="code">
+# F1=T1  F2=T2  F3=P(бар)  F4=Q(л/мин)  F5=H(доля пара)
+750  745  1.05  9.5  0.20
+760  755  1.08  9.7  0.22
+770  768  1.10 10.0  0.25
+780  779  1.12 10.3  0.27
+790  788  1.15 10.5  0.30
+800  798  1.18 10.8  0.33
+810  807  1.20 11.0  0.35
+820  817  1.23 11.2  0.38
+      </pre>
+      <ul class="small">
+        <li>Температуры T₁, T₂ растут примерно вместе.</li>
+        <li>Давление и расход газа растут вместе с температурой.</li>
+        <li>Влажность H также связана с режимом (например, рост парообразования).</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>Ожидаемая структура PCA</h3>
+      <ul class="small">
+        <li>PC1 — общий режим нагрева/нагрузки (рост T₁, T₂, давления, расхода, влажности).</li>
+        <li>PC2 — различия между температурами зон (T₁ vs T₂), возможно разные свойства магистрали.</li>
+        <li>PC3 — более тонкий эффект, например, отклонение влажности от ожидаемого при данном нагреве.</li>
+      </ul>
+      <p class="small">
+        PCA здесь отделяет «общий энергетический режим» от более тонких эффектов, связанных с геометрией,
+        теплопереносом или нестандартной работой конкретного датчика.
+      </p>
+    </section>
+
+    <section>
+      <h3>Калькулятор PCA: F1–F5 (режим печи)</h3>
+      <p class="small">
+        Введите строки вида: T1 T2 P Q H.
+      </p>
+      <textarea id="pca-input-phys-2" style="width:100%; height:220px;">
+750  745  1.05  9.5  0.20
+760  755  1.08  9.7  0.22
+770  768  1.10 10.0  0.25
+780  779  1.12 10.3  0.27
+790  788  1.15 10.5  0.30
+800  798  1.18 10.8  0.33
+810  807  1.20 11.0  0.35
+820  817  1.23 11.2  0.38
+      </textarea>
+      <p class="small">
+        <label>
+          <input type="checkbox" id="pca-standardize-phys-2" checked>
+          Стандартизировать признаки (обязательно: разные единицы измерения)
+        </label>
+      </p>
+      <p class="small">
+        k (число компонент для проекций):
+        <input type="number" id="pca-k-phys-2" value="2" min="1" max="5" style="width:60px;">
+        &nbsp;
+        <button id="pca-run-btn-phys-2">
+          PCA → объяснённая дисперсия и факторы режима
+        </button>
+      </p>
+      <div id="pca-output-phys-2" class="small"
+           style="background:#111; padding:10px; border-radius:5px; white-space:pre-wrap;"></div>
+      <p class="small">
+        Интерпретация: по первым 1–2 компонентам можно отслеживать общий режим печи и отклонения
+        от типичного профиля, даже если по отдельным датчикам «всё в пределах допуска».
+      </p>
+    </section>
+
+    <!-- ======================================================
+         ЧАСТЬ 3. УСЛОЖНЕНИЕ: ДОБАВЛЯЕМ НОВЫЕ РЕЖИМЫ И АНОМАЛИИ
+         ====================================================== -->
+    <section>
+      <h2>Часть 3</h2>
+      <h3>Усложнение: новый режим и аномальные точки</h3>
+      <p class="small">
+        Добавим к предыдущему набору ещё несколько замеров, где печь ведёт себя аномально:
+        T2 отстаёт, давление скачет, а влажность ведёт себя нетипично.
+      </p>
+    </section>
+
+    <section>
+      <h3>Данные с аномалиями</h3>
+      <p class="small">
+        Скопируйте основной набор и добавьте несколько строк:
+      </p>
+      <pre class="code">
+# Нормальный режим
+750  745  1.05  9.5  0.20
+760  755  1.08  9.7  0.22
+770  768  1.10 10.0  0.25
+780  779  1.12 10.3  0.27
+790  788  1.15 10.5  0.30
+800  798  1.18 10.8  0.33
+810  807  1.20 11.0  0.35
+820  817  1.23 11.2  0.38
+
+# Новый режим: T2 «проседает», влажность выше обычного
+830  810  1.24 11.3  0.45
+840  818  1.25 11.5  0.50
+
+# Возможная аномалия: скачок давления при нормальной температуре
+790  789  1.35 10.4  0.29
+      </pre>
+      <ul class="small">
+        <li>Ожидаем, что PC1 по‑прежнему отражает общий нагрев.</li>
+        <li>PC2 и PC3 начнут «оттягивать» режимы с нетипичным поведением T2, P, H.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>Калькулятор PCA: режимы + аномалии</h3>
+      <p class="small">
+        Вставьте расширенный набор F1–F5 (включая новые строки) сюда и пересчитайте PCA.
+      </p>
+      <textarea id="pca-input-phys-3" style="width:100%; height:260px;">
+750  745  1.05  9.5  0.20
+760  755  1.08  9.7  0.22
+770  768  1.10 10.0  0.25
+780  779  1.12 10.3  0.27
+790  788  1.15 10.5  0.30
+800  798  1.18 10.8  0.33
+810  807  1.20 11.0  0.35
+820  817  1.23 11.2  0.38
+
+830  810  1.24 11.3  0.45
+840  818  1.25 11.5  0.50
+
+790  789  1.35 10.4  0.29
+      </textarea>
+      <p class="small">
+        <label>
+          <input type="checkbox" id="pca-standardize-phys-3" checked>
+          Стандартизировать признаки
+        </label>
+        &nbsp;
+        k (число компонент):
+        <input type="number" id="pca-k-phys-3" value="2" min="1" max="5" style="width:60px;">
+      </p>
+      <p class="small">
+        <button id="pca-run-btn-phys-3">
+          PCA → режимы и аномалии
+        </button>
+      </p>
+      <div id="pca-output-phys-3" class="small"
+           style="background:#111; padding:10px; border-radius:5px; white-space:pre-wrap;"></div>
+      <p class="small">
+        Задача студентам: по нагрузкам (loadings) и координатам точек в PC‑пространстве
+        понять, какие строки данных соответствуют новому режиму и какую физику он отражает
+        (например, ухудшение теплообмена или изменение состава газа).
+      </p>
+    </section>
+
+    <!-- ======================================================
+         ФИНАЛ: САМОСТОЯТЕЛЬНЫЕ ВОПРОСЫ
+         ====================================================== -->
+    <section>
+      <h2>Самостоятельные вопросы</h2>
+      <ul class="small">
+        <li>Как изменится PC1, если добавить ещё один датчик температуры T3 с похожим поведением?</li>
+        <li>Какие физические величины вы бы добавили к F1–F5, чтобы лучше ловить нештатные режимы (например, вибрации, ток нагревателя)?</li>
+        <li>Как использовать PCA‑координаты (PC1–PC2) как признаки для последующей кластеризации режимов или детектирования аномалий?</li>
+      </ul>
+      <p class="small">
+        Для вдохновения по промышленным кейсам PCA можно посмотреть, например,
+        <a href="https://support.seeq.com/kb/latest/cloud/principal-component-analysis-pca"
+           target="_blank">PCA в Seeq для производственных данных</a> или
+        <a href="https://docs.tibco.com/pub/stat/14.3.0/doc/html/user-guide/_shared/pca-example.htm"
+           target="_blank">пример PCA для процесса испарения</a>.
+      </p>
+    </section>
+
+  </div>
+</div>
+
+<!-- Reveal.js core -->
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+<!-- Plugins -->
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/math/math.js"></script>
+
+<!-- PCA-JS -->
+<script src="https://cdn.jsdelivr.net/npm/pca-js@1.0.0/pca.min.js"></script>
+
+<script>
+  // ---------- ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ----------
+
+  function parseData(text) {
+    const lines = text.trim().split(/\r?\n/);
+    const data = [];
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const parts = line.trim().split(/[\s,;]+/);
+      const nums = parts.map(Number).filter(v => !Number.isNaN(v));
+      if (nums.length > 0) data.push(nums);
+    }
+    return data;
+  }
+
+  // Стандартизация по столбцам: (x - mean) / std
+  function standardizeMatrix(data) {
+    const n = data.length;
+    const d = data[0].length;
+    const means = new Array(d).fill(0);
+    const variances = new Array(d).fill(0);
+
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < d; j++) {
+        means[j] += data[i][j];
+      }
+    }
+    for (let j = 0; j < d; j++) {
+      means[j] /= n;
+    }
+
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < d; j++) {
+        const diff = data[i][j] - means[j];
+        variances[j] += diff * diff;
+      }
+    }
+    for (let j = 0; j < d; j++) {
+      variances[j] = n > 1 ? variances[j] / (n - 1) : 0;
+    }
+
+    const stds = variances.map(v => Math.sqrt(v));
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const row = [];
+      for (let j = 0; j < d; j++) {
+        if (stds[j] === 0 || !isFinite(stds[j])) {
+          row.push(0);
+        } else {
+          row.push((data[i][j] - means[j]) / stds[j]);
+        }
+      }
+      out.push(row);
+    }
+    return { data: out, means, stds };
+  }
+
+  function eigenvaluesFromVectors(vectors) {
+    return vectors.map(v => v.eigenvalue);
+  }
+
+  function explainedVariance(eigenvalues) {
+    const total = eigenvalues.reduce((a, b) => a + b, 0);
+    return eigenvalues.map(v => total === 0 ? 0 : v / total);
+  }
+
+  function projectData(data, vectors, k) {
+    const n = data.length;
+    const d = data[0].length;
+    const kk = Math.min(k, vectors.length, d);
+    const W = [];
+    for (let i = 0; i < kk; i++) {
+      W.push(vectors[i].vector);
+    }
+    const projections = [];
+    for (let i = 0; i < n; i++) {
+      const row = [];
+      for (let c = 0; c < kk; c++) {
+        const v = W[c];
+        let dot = 0;
+        for (let j = 0; j < d; j++) {
+          dot += data[i][j] * v[j];
+        }
+        row.push(dot);
+      }
+      projections.push(row);
+    }
+    return { projections, kk, W };
+  }
+
+  // ---------- ИНИЦИАЛИЗАЦИЯ REVEAL + ОБРАБОТЧИКИ ----------
+
+  Reveal.initialize({
+    hash: true,
+    slideNumber: true,
+    transition: 'fade',
+    width: 1280,
+    height: 720,
+    plugins: [ RevealMarkdown, RevealNotes, RevealHighlight, RevealMath.MathJax3 ]
+  });
+
+  Reveal.addEventListener('ready', function () {
+
+    // Калькулятор 1: T1–T2
+    (function () {
+      const btn = document.getElementById('pca-run-btn-phys-1');
+      const input = document.getElementById('pca-input-phys-1');
+      const out = document.getElementById('pca-output-phys-1');
+      const chb = document.getElementById('pca-standardize-phys-1');
+      if (!btn || !input || !out || !chb) return;
+
+      btn.addEventListener('click', function () {
+        let data = parseData(input.value);
+        if (!data.length) {
+          out.textContent = 'Ошибка: не удалось прочитать данные.';
+          return;
+        }
+        if (data[0].length !== 2) {
+          out.textContent = 'Нужно ровно 2 признака (T1, T2).';
+          return;
+        }
+
+        let info = '';
+        if (chb.checked) {
+          const stdRes = standardizeMatrix(data);
+          data = stdRes.data;
+          info += 'T1, T2 стандартизированы.\n\n';
+        } else {
+          info += 'T1, T2 НЕ стандартизированы.\n\n';
+        }
+
+        try {
+          const vectors = PCA.getEigenVectors(data);
+          const eigenvalues = eigenvaluesFromVectors(vectors);
+          const ev = explainedVariance(eigenvalues);
+          const projRes = projectData(data, vectors, 2);
+
+          let text = '';
+          text += info;
+          text += 'Собственные значения (eigenvalues):\n' +
+                  JSON.stringify(eigenvalues, null, 2) + '\n\n';
+          text += 'Доли объяснённой дисперсии:\n' +
+                  JSON.stringify(ev, null, 2) + '\n\n';
+          text += 'Собственные векторы (PC1, PC2):\n' +
+                  JSON.stringify(projRes.W, null, 2) + '\n\n';
+          text += 'Координаты замеров в пространстве (PC1, PC2):\n' +
+                  JSON.stringify(projRes.projections, null, 2) + '\n';
+
+          out.textContent = text;
+        } catch (e) {
+          out.textContent = 'Ошибка при вычислении PCA: ' + e;
+        }
+      });
+    })();
+
+    // Калькулятор 2: F1–F5 (режим печи)
+    (function () {
+      const btn = document.getElementById('pca-run-btn-phys-2');
+      const input = document.getElementById('pca-input-phys-2');
+      const out = document.getElementById('pca-output-phys-2');
+      const chb = document.getElementById('pca-standardize-phys-2');
+      const kInput = document.getElementById('pca-k-phys-2');
+      if (!btn || !input || !out || !chb || !kInput) return;
+
+      btn.addEventListener('click', function () {
+        let data = parseData(input.value);
+        if (!data.length) {
+          out.textContent = 'Ошибка: не удалось прочитать данные.';
+          return;
+        }
+        const d = data[0].length;
+        if (d < 2) {
+          out.textContent = 'Нужно минимум 2 признака.';
+          return;
+        }
+
+        let k = parseInt(kInput.value, 10);
+        if (!Number.isInteger(k) || k < 1) k = 1;
+        if (k > d) k = d;
+
+        let info = '';
+        if (chb.checked) {
+          const stdRes = standardizeMatrix(data);
+          data = stdRes.data;
+          info += 'Признаки стандартизированы.\n\n';
+        } else {
+          info += 'Признаки НЕ стандартизированы, результат может искажаться масштабом.\n\n';
+        }
+
+        try {
+          const vectors = PCA.getEigenVectors(data);
+          const eigenvalues = eigenvaluesFromVectors(vectors);
+          const ev = explainedVariance(eigenvalues);
+          const cumulative = [];
+          let sum = 0;
+          for (let i = 0; i < ev.length; i++) {
+            sum += ev[i];
+            cumulative.push(sum);
+          }
+
+          const projRes = projectData(data, vectors, k);
+
+          let text = '';
+          text += info;
+          text += 'Собственные значения:\n' +
+                  JSON.stringify(eigenvalues, null, 2) + '\n\n';
+          text += 'Доли объяснённой дисперсии по всем компонентам:\n' +
+                  JSON.stringify(ev, null, 2) + '\n\n';
+          text += 'Накопленная доля (cumulative explained variance):\n' +
+                  JSON.stringify(cumulative, null, 2) + '\n\n';
+          text += 'Используем k = ' + projRes.kk + ' компонент(ы).\n\n';
+          text += 'Первые k собственных векторов (веса признаков T1, T2, P, Q, H):\n' +
+                  JSON.stringify(projRes.W, null, 2) + '\n\n';
+          text += 'Проекции замеров в пространстве первых k компонент:\n' +
+                  JSON.stringify(projRes.projections, null, 2) + '\n';
+
+          out.textContent = text;
+        } catch (e) {
+          out.textContent = 'Ошибка при вычислении PCA: ' + e;
+        }
+      });
+    })();
+
+    // Калькулятор 3: F1–F5 + аномалии
+    (function () {
+      const btn = document.getElementById('pca-run-btn-phys-3');
+      const input = document.getElementById('pca-input-phys-3');
+      const out = document.getElementById('pca-output-phys-3');
+      const chb = document.getElementById('pca-standardize-phys-3');
+      const kInput = document.getElementById('pca-k-phys-3');
+      if (!btn || !input || !out || !chb || !kInput) return;
+
+      btn.addEventListener('click', function () {
+        let data = parseData(input.value);
+        if (!data.length) {
+          out.textContent = 'Ошибка: не удалось прочитать данные.';
+          return;
+        }
+        const d = data[0].length;
+        if (d < 2) {
+          out.textContent = 'Нужно минимум 2 признака.';
+          return;
+        }
+
+        let k = parseInt(kInput.value, 10);
+        if (!Number.isInteger(k) || k < 1) k = 1;
+        if (k > d) k = d;
+
+        let info = '';
+        if (chb.checked) {
+          const stdRes = standardizeMatrix(data);
+          data = stdRes.data;
+          info += 'Признаки стандартизированы.\n\n';
+        } else {
+          info += 'Признаки НЕ стандартизированы.\n\n';
+        }
+
+        try {
+          const vectors = PCA.getEigenVectors(data);
+          const eigenvalues = eigenvaluesFromVectors(vectors);
+          const ev = explainedVariance(eigenvalues);
+          const cumulative = [];
+          let sum = 0;
+          for (let i = 0; i < ev.length; i++) {
+            sum += ev[i];
+            cumulative.push(sum);
+          }
+
+          const projRes = projectData(data, vectors, k);
+
+          let text = '';
+          text += info;
+          text += 'Собственные значения:\n' +
+                  JSON.stringify(eigenvalues, null, 2) + '\n\n';
+          text += 'Доли объяснённой дисперсии:\n' +
+                  JSON.stringify(ev, null, 2) + '\n\n';
+          text += 'Накопленная доля:\n' +
+                  JSON.stringify(cumulative, null, 2) + '\n\n';
+          text += 'Первые k собственных векторов (веса T1, T2, P, Q, H):\n' +
+                  JSON.stringify(projRes.W, null, 2) + '\n\n';
+          text += 'Проекции замеров в пространстве первых k компонент:\n' +
+                  JSON.stringify(projRes.projections, null, 2) + '\n';
+
+          out.textContent = text;
+        } catch (e) {
+          out.textContent = 'Ошибка при вычислении PCA: ' + e;
+        }
+      });
+    })();
+
+  });
+</script>
+
+</body>
+</html>

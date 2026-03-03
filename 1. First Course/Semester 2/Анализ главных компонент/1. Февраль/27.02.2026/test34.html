@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Тест по практикам 3–4 (PCA: риск, wine, печь)</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #0b0c10;
+      color: #f4f4f4;
+      margin: 0;
+      padding: 20px;
+    }
+    h1, h2, h3 {
+      color: #f8f9fa;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #15171f;
+      padding: 20px 24px 30px;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    .meta {
+      margin-bottom: 20px;
+      padding: 12px 14px;
+      border-radius: 6px;
+      background: #1e212b;
+      font-size: 14px;
+    }
+    label {
+      font-size: 14px;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 6px 8px;
+      border-radius: 4px;
+      border: 1px solid #444;
+      margin-top: 4px;
+      margin-bottom: 8px;
+      background: #0f1117;
+      color: #f4f4f4;
+    }
+    .question {
+      margin-bottom: 20px;
+      padding: 14px 16px;
+      border-radius: 6px;
+      background: #1e212b;
+    }
+    .question h3 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+    .options {
+      margin-top: 8px;
+      margin-left: 4px;
+    }
+    .options label {
+      display: block;
+      margin-bottom: 4px;
+      cursor: pointer;
+    }
+    .hint {
+      font-size: 13px;
+      color: #b0b3c1;
+      margin-top: 4px;
+    }
+    .feedback {
+      margin-top: 8px;
+      padding: 8px 10px;
+      border-radius: 4px;
+      font-size: 13px;
+      display: none;
+    }
+    .feedback.correct {
+      background: #12351f;
+      color: #a9f5b9;
+      border: 1px solid #2ecc71;
+    }
+    .feedback.incorrect {
+      background: #3a1515;
+      color: #ffb3b3;
+      border: 1px solid #e74c3c;
+    }
+    .footer {
+      margin-top: 20px;
+    }
+    button {
+      cursor: pointer;
+      padding: 10px 18px;
+      border-radius: 4px;
+      border: none;
+      background: #007bff;
+      color: white;
+      font-weight: 600;
+      font-size: 15px;
+      margin-right: 10px;
+    }
+    button:disabled {
+      background: #555;
+      cursor: default;
+    }
+    #result {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 6px;
+      display: none;
+      font-size: 15px;
+    }
+    .result-good {
+      background: #12351f;
+      color: #a9f5b9;
+      border: 1px solid #2ecc71;
+    }
+    .result-mid {
+      background: #353516;
+      color: #f5f2a9;
+      border: 1px solid #f1c40f;
+    }
+    .result-bad {
+      background: #3a1515;
+      color: #ffb3b3;
+      border: 1px solid #e74c3c;
+    }
+    .note {
+      font-size: 12px;
+      color: #8f94a1;
+      margin-top: 10px;
+    }
+    .mc-type {
+      font-size: 12px;
+      color: #cfd2dc;
+      font-style: italic;
+      margin-bottom: 4px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>Тест по PCA (практики 3–4 и пример с печью)</h1>
+  <div class="meta">
+    <div><strong>Группа:</strong> 1-ИИЭиГО-25ИАИТ-113М</div>
+    <div><strong>Специальность:</strong> Анализ данных, курс 1, магистратура</div>
+    <div><strong>Тема:</strong> PCA для финансового риска, wine‑данных и физического эксперимента (печь)</div>
+  </div>
+
+  <div class="meta">
+    <label>Ваше имя и фамилия:
+      <input type="text" id="studentName" placeholder="Введите ФИО">
+    </label>
+    <label>Ваша группа:
+      <input type="text" id="studentGroup" value="1-ИИЭиГО-25ИАИТ-113М">
+    </label>
+  </div>
+
+  <!-- ВОПРОСЫ -->
+  <!-- Q1: single choice, базовое определение -->
+  <div class="question" data-qid="q1">
+    <h3>1. Какой главный смысл метода PCA в контексте наших практик?</h3>
+    <div class="mc-type">Одиночный выбор (single choice)</div>
+    <div class="options">
+      <label><input type="radio" name="q1" value="a">
+        Увеличить число признаков, чтобы модель стала сложнее.
+      </label>
+      <label><input type="radio" name="q1" value="b">
+        Сжать многомерные данные в меньшее число компонент, максимально сохранив информативность.
+      </label>
+      <label><input type="radio" name="q1" value="c">
+        Удалить из данных все коррелированные признаки.
+      </label>
+      <label><input type="radio" name="q1" value="d">
+        Построить только линейную регрессию по одному признаку.
+      </label>
+    </div>
+    <div class="hint">Подсказка: вспомните, как мы сокращали 5 индикаторов риска до 2–3 факторов.</div>
+    <div class="feedback" id="fb-q1"></div>
+  </div>
+
+  <!-- Q2: single choice, стандартизация -->
+  <div class="question" data-qid="q2">
+    <h3>2. Зачем для признаков F1–F5 (риск клиента, wine, печь) мы почти всегда делали стандартизацию перед PCA?</h3>
+    <div class="mc-type">Одиночный выбор (single choice)</div>
+    <div class="options">
+      <label><input type="radio" name="q2" value="a">
+        Чтобы PCA работала только с целыми числами.
+      </label>
+      <label><input type="radio" name="q2" value="b">
+        Чтобы признаки имели сопоставимый масштаб, и ни один не доминировал за счёт единиц измерения.
+      </label>
+      <label><input type="radio" name="q2" value="c">
+        Чтобы заменить все нулевые значения на единицы.
+      </label>
+      <label><input type="radio" name="q2" value="d">
+        Чтобы ускорить работу браузера.
+      </label>
+    </div>
+    <div class="hint">Вспомните пример, где температура измеряется в °C, давление — в барах, расход — в л/мин.</div>
+    <div class="feedback" id="fb-q2"></div>
+  </div>
+
+  <!-- Q3: multiple choice, объяснённая дисперсия -->
+  <div class="question" data-qid="q3" data-multiple="true">
+    <h3>3. Какие утверждения про «объяснённую дисперсию» в PCA верны?</h3>
+    <div class="mc-type">Несколько правильных ответов (multiple choice)</div>
+    <div class="options">
+      <label><input type="checkbox" name="q3" value="a">
+        Доля объяснённой дисперсии компоненты = её собственное значение / сумма всех собственных значений.
+      </label>
+      <label><input type="checkbox" name="q3" value="b">
+        Сумма долей объяснённой дисперсии всех компонент равна 1 (100%).
+      </label>
+      <label><input type="checkbox" name="q3" value="c">
+        Объяснённая дисперсия не зависит от того, стандартизировали мы признаки или нет.
+      </label>
+      <label><input type="checkbox" name="q3" value="d">
+        Накопленная доля объяснённой дисперсии помогает выбрать число компонент.
+      </label>
+    </div>
+    <div class="hint">Подумайте о том, как мы решали, брать 2 или 3 компоненты для риска и wine.</div>
+    <div class="feedback" id="fb-q3"></div>
+  </div>
+
+  <!-- Q4: single choice, интерпретация финансового риска -->
+  <div class="question" data-qid="q4">
+    <h3>4. В задаче с финансовым риском (F1–F5), какой смысл обычно имеет первая главная компонента PC1?</h3>
+    <div class="mc-type">Одиночный выбор (single choice)</div>
+    <div class="options">
+      <label><input type="radio" name="q4" value="a">
+        Чисто технический артефакт, не имеющий интерпретации.
+      </label>
+      <label><input type="radio" name="q4" value="b">
+        Общий фактор «кредитного риска», если большие веса у F1, F2, F4, F5.
+      </label>
+      <label><input type="radio" name="q4" value="c">
+        Количество клиентов в выборке.
+      </label>
+      <label><input type="radio" name="q4" value="d">
+        Только число кредитных линий F3.
+      </label>
+    </div>
+    <div class="hint">Вспомните интерпретации: просрочки, долговая нагрузка, использование лимита.</div>
+    <div class="feedback" id="fb-q4"></div>
+  </div>
+
+  <!-- Q5: multiple choice, wine -->
+  <div class="question" data-qid="q5" data-multiple="true">
+    <h3>5. В упрощённом wine‑примере, какие признаки обычно сильно нагружают PC1 и задают «насыщенность/крепость» вина?</h3>
+    <div class="mc-type">Несколько правильных ответов (multiple choice)</div>
+    <div class="options">
+      <label><input type="checkbox" name="q5" value="a">
+        Alcohol (ALC).
+      </label>
+      <label><input type="checkbox" name="q5" value="b">
+        Color Intensity (CI).
+      </label>
+      <label><input type="checkbox" name="q5" value="c">
+        Proline (PRO).
+      </label>
+      <label><input type="checkbox" name="q5" value="d">
+        Номер строки в таблице.
+      </label>
+    </div>
+    <div class="hint">Сравните с типичными разборками wine‑PCA в sklearn.</div>
+    <div class="feedback" id="fb-q5"></div>
+  </div>
+
+  <!-- Q6: single choice, печь PC1 -->
+  <div class="question" data-qid="q6">
+    <h3>6. В примере с печью (T1, T2, P, Q, H), что обычно описывает первая главная компонента PC1?</h3>
+    <div class="mc-type">Одиночный выбор (single choice)</div>
+    <div class="options">
+      <label><input type="radio" name="q6" value="a">
+        Только шум измерений.
+      </label>
+      <label><input type="radio" name="q6" value="b">
+        Общий режим нагрева/нагрузки (совместный рост T1, T2, P, Q, H).
+      </label>
+      <label><input type="radio" name="q6" value="c">
+        Исключительно отклонения T2 от T1.
+      </label>
+      <label><input type="radio" name="q6" value="d">
+        Среднее значение индекса замера.
+      </label>
+    </div>
+    <div class="hint">Посмотрите на тренды всех датчиков при «нормальном» режиме.</div>
+    <div class="feedback" id="fb-q6"></div>
+  </div>
+
+  <!-- Q7: single choice, печь PC2 -->
+  <div class="question" data-qid="q7">
+    <h3>7. Что в нашем примере с печью чаще всего отражает PC2 (вторая главная компонента)?</h3>
+    <div class="mc-type">Одиночный выбор (single choice)</div>
+    <div class="options">
+      <label><input type="radio" name="q7" value="a">
+        Разницу между датчиками T1 и T2 (неоднородность температурного поля).
+      </label>
+      <label><input type="radio" name="q7" value="b">
+        Количество минут, прошедших с начала эксперимента.
+      </label>
+      <label><input type="radio" name="q7" value="c">
+        Только абсолютное значение давления.
+      </label>
+      <label><input type="radio" name="q7" value="d">
+        Случайные номера замеров.
+      </label>
+    </div>
+    <div class="hint">Вспомните интерпретацию PC2 как «перекос» T1 vs T2.</div>
+    <div class="feedback" id="fb-q7"></div>
+  </div>
+
+  <!-- Q8: multiple choice, loadings -->
+  <div class="question" data-qid="q8" data-multiple="true">
+    <h3>8. Что означает большой по модулю вес признака в eigenvector (loadings) для данной компоненты?</h3>
+    <div class="mc-type">Несколько правильных ответов (multiple choice)</div>
+    <div class="options">
+      <label><input type="checkbox" name="q8" value="a">
+        Признак сильно влияет на значение этой главной компоненты.
+      </label>
+      <label><input type="checkbox" name="q8" value="b">
+        Признак можно полностью удалить из данных.
+      </label>
+      <label><input type="checkbox" name="q8" value="c">
+        Знак веса (плюс/минус) показывает направление связи с компонентой.
+      </label>
+      <label><input type="checkbox" name="q8" value="d">
+        Признак никак не связан с этой компонентой.
+      </label>
+    </div>
+    <div class="hint">Подумайте о стрелках‑нагрузках в биплоте: чем длиннее стрелка, тем сильнее вклад.</div>
+    <div class="feedback" id="fb-q8"></div>
+  </div>
+
+  <!-- Q9: single choice, выбор k -->
+  <div class="question" data-qid="q9">
+    <h3>9. Какой критерий мы использовали для выбора числа компонент k в задачах практик?</h3>
+    <div class="mc-type">Одиночный выбор (single choice)</div>
+    <div class="options">
+      <label><input type="radio" name="q9" value="a">
+        k равно числу исходных признаков.
+      </label>
+      <label><input type="radio" name="q9" value="b">
+        k выбираем так, чтобы суммарная объяснённая дисперсия была не меньше 90–95%.
+      </label>
+      <label><input type="radio" name="q9" value="c">
+        k всегда равно 1.
+      </label>
+      <label><input type="radio" name="q9" value="d">
+        k определяется случайным числом.
+      </label>
+    </div>
+    <div class="hint">Сравните с «elbow‑подходом» и накопленной объяснённой дисперсией.</div>
+    <div class="feedback" id="fb-q9"></div>
+  </div>
+
+  <!-- Q10: multiple choice, применение PCA -->
+  <div class="question" data-qid="q10" data-multiple="true">
+    <h3>10. Какие задачи логично решать в пространстве главных компонент по результатам наших практик?</h3>
+    <div class="mc-type">Несколько правильных ответов (multiple choice)</div>
+    <div class="options">
+      <label><input type="checkbox" name="q10" value="a">
+        Кластеризация клиентов по риску в пространстве (PC1, PC2).
+      </label>
+      <label><input type="checkbox" name="q10" value="b">
+        Визуализация режимов работы печи и поиск аномалий в координатах (PC1, PC2, PC3).
+      </label>
+      <label><input type="checkbox" name="q10" value="c">
+        Классификация сортов вина на основе PC1–PC2 вместо исходных 13 признаков.
+      </label>
+      <label><input type="checkbox" name="q10" value="d">
+        Генерация случайных чисел для Monte Carlo.
+      </label>
+    </div>
+    <div class="hint">Подумайте, где PCA помогает уменьшить размерность и сделать картинку более читаемой.</div>
+    <div class="feedback" id="fb-q10"></div>
+  </div>
+
+  <div class="footer">
+    <button id="checkBtn">Проверить ответы и отправить результат</button>
+    <button id="resetBtn" type="button">Сбросить ответы</button>
+    <div id="result"></div>
+    <div class="note">
+      После проверки результат будет автоматически отправлен в указанную Google Form (если вы настроите URL и поля).
+    </div>
+  </div>
+</div>
+
+<!-- СКРЫТАЯ ФОРМА ДЛЯ ОТПРАВКИ В GOOGLE FORM -->
+<!-- ВАЖНО: ЗАМЕНИТЕ action НА ВАШ URL formResponse И entry.* НА ВАШИ ИД ПОЛЕЙ -->
+<form id="googleForm" method="POST" target="_blank" style="display:none;"
+      action="https://docs.google.com/forms/d/e/XXXXXXXXXXXXXXXXXXXXXX/formResponse">
+  <!-- ИМЯ -->
+  <input type="hidden" name="entry.1111111111" id="gf_name">
+  <!-- ГРУППА -->
+  <input type="hidden" name="entry.2222222222" id="gf_group">
+  <!-- ТЕМА -->
+  <input type="hidden" name="entry.3333333333" id="gf_topic">
+  <!-- СЧЁТ -->
+  <input type="hidden" name="entry.4444444444" id="gf_score">
+</form>
+
+<!--
+ИНСТРУКЦИИ ПО НАСТРОЙКЕ GOOGLE FORM:
+
+1. Создайте Google Form с нужными полями (Имя, Группа, Тема, Счёт).
+2. Откройте форму, в меню выберите "Получить ссылку для предварительного заполнения".
+3. Заполните поля тестовыми значениями, нажмите "Получить ссылку".
+4. Скопируйте URL, замените в нём "viewform" на "formResponse".
+5. Вставьте этот URL в атрибут action формы выше.
+6. В URL найдите параметры вида entry.XXXXXXXXX=... и подставьте их вместо
+   entry.1111111111, entry.2222222222, entry.3333333333, entry.4444444444.
+7. После этого скрытая форма будет отправлять результаты при завершении теста.
+-->
+
+<script>
+  // Ключ: id вопроса -> правильные ответы и тип
+  // Для multiple ответы — массив всех корректных значений
+  const ANSWERS = {
+    q1: { type: "single", correct: "b" },
+    q2: { type: "single", correct: "b" },
+    q3: { type: "multiple", correct: ["a", "b", "d"] },
+    q4: { type: "single", correct: "b" },
+    q5: { type: "multiple", correct: ["a", "b", "c"] },
+    q6: { type: "single", correct: "b" },
+    q7: { type: "single", correct: "a" },
+    q8: { type: "multiple", correct: ["a", "c"] },
+    q9: { type: "single", correct: "b" },
+    q10: { type: "multiple", correct: ["a", "b", "c"] }
+  };
+
+  // Тексты обратной связи для каждого вопроса
+  const FEEDBACK_TEXT = {
+    q1: {
+      correct: "Верно: PCA сжимает размерность, сохраняя основную структуру вариаций данных.",
+      incorrect: "Неверно. Главная задача PCA — уменьшить размерность с сохранением информативности, а не просто усложнить модель."
+    },
+    q2: {
+      correct: "Правильно: стандартизация выравнивает масштаб признаков и предотвращает доминирование единиц измерения.",
+      incorrect: "Неверно. Ключевая причина — разные масштабы (°C, бары, л/мин, доля пара), а не только численные форматы."
+    },
+    q3: {
+      correct: "Да: доля = λᵢ / Σλ, суммы долей = 1, а накопленная доля помогает выбрать k компонент.",
+      incorrect: "Не совсем. Вспомните, что доля считается как λᵢ / Σλ, а по накопленной доле мы выбираем число компонент."
+    },
+    q4: {
+      correct: "Да: PC1 для F1–F5 обычно интерпретируется как общий фактор кредитного риска.",
+      incorrect: "Подумайте: если высокие веса у просрочек, долговой нагрузки и использования лимита — это общий риск клиента."
+    },
+    q5: {
+      correct: "Верно: Alcohol, Color Intensity и Proline задают «тяжёлость» и насыщенность вина.",
+      incorrect: "Проверьте, какие химические показатели реально связаны с крепостью и интенсивностью вина."
+    },
+    q6: {
+      correct: "Да: PC1 отражает общий режим нагрева/нагрузки печи, когда все датчики растут согласованно.",
+      incorrect: "Неверно. Первый фактор обычно описывает совместный рост T1, T2, давления, расхода и влажности."
+    },
+    q7: {
+      correct: "Верно: PC2 передаёт «перекос» между T1 и T2, то есть неоднородность температурного поля.",
+      incorrect: "Подумайте: PC2 часто отражает различия между зонами печи, а не просто время эксперимента."
+    },
+    q8: {
+      correct: "Да: большой по модулю вес означает сильный вклад признака, а знак указывает направление связи.",
+      incorrect: "Обратите внимание: длина стрелки в биплоте показывает вклад признака, а знак веса — направление."
+    },
+    q9: {
+      correct: "Правильно: мы выбираем k так, чтобы суммарная объяснённая дисперсия была ≈ 90–95%.",
+      incorrect: "Подумайте о «elbow‑подходе» и накопленной объяснённой дисперсии, а не о фиксированном k."
+    },
+    q10: {
+      correct: "Да: PCA удобно использовать для кластеризации, визуализации режимов и классификации в сниженной размерности.",
+      incorrect: "Подумайте, где уменьшение размерности упрощает задачи визуализации и анализа, а где нет."
+    }
+  };
+
+  function arraysEqualAsSets(a, b) {
+    if (!Array.isArray(a) || !Array.isArray(b)) return false;
+    if (a.length !== b.length) return false;
+    const sa = new Set(a);
+    const sb = new Set(b);
+    if (sa.size !== sb.size) return false;
+    for (const x of sa) {
+      if (!sb.has(x)) return false;
+    }
+    return true;
+  }
+
+  function evaluateQuiz() {
+    let score = 0;
+    let total = Object.keys(ANSWERS).length;
+
+    for (const qid of Object.keys(ANSWERS)) {
+      const meta = ANSWERS[qid];
+      const feedbackEl = document.getElementById("fb-" + qid);
+      feedbackEl.style.display = "block";
+
+      if (meta.type === "single") {
+        const selected = document.querySelector(`.question[data-qid="${qid}"] input[type="radio"]:checked`);
+        if (!selected) {
+          feedbackEl.className = "feedback incorrect";
+          feedbackEl.textContent = "Ответ не выбран. Попробуйте ещё раз.";
+          continue;
+        }
+        const val = selected.value;
+        if (val === meta.correct) {
+          score += 1;
+          feedbackEl.className = "feedback correct";
+          feedbackEl.textContent = FEEDBACK_TEXT[qid].correct;
+        } else {
+          feedbackEl.className = "feedback incorrect";
+          feedbackEl.textContent = FEEDBACK_TEXT[qid].incorrect;
+        }
+      } else if (meta.type === "multiple") {
+        const checkboxes = document.querySelectorAll(`.question[data-qid="${qid}"] input[type="checkbox"]:checked`);
+        const vals = Array.from(checkboxes).map(c => c.value);
+        if (!vals.length) {
+          feedbackEl.className = "feedback incorrect";
+          feedbackEl.textContent = "Ответ не выбран. Отметьте все верные варианты.";
+          continue;
+        }
+        if (arraysEqualAsSets(vals, meta.correct)) {
+          score += 1;
+          feedbackEl.className = "feedback correct";
+          feedbackEl.textContent = FEEDBACK_TEXT[qid].correct;
+        } else {
+          feedbackEl.className = "feedback incorrect";
+          feedbackEl.textContent = FEEDBACK_TEXT[qid].incorrect;
+        }
+      }
+    }
+
+    const resultEl = document.getElementById("result");
+    resultEl.style.display = "block";
+    const percent = Math.round((score / total) * 100);
+
+    let cls = "result-mid";
+    let msg = "";
+    if (percent >= 85) {
+      cls = "result-good";
+      msg = "Отличный результат. Материал практик 3–4 и пример с печью усвоен на высоком уровне.";
+    } else if (percent >= 60) {
+      cls = "result-mid";
+      msg = "Неплохо, но есть смысл пересмотреть интерпретацию компонент и explained variance.";
+    } else {
+      cls = "result-bad";
+      msg = "Рекомендую ещё раз внимательно пройтись по примерам с риском, wine и печью, и попробовать тест снова.";
+    }
+
+    resultEl.className = "";
+    resultEl.classList.add(cls);
+    resultEl.textContent = `Ваш результат: ${score} из ${total} (${percent}%). ${msg}`;
+
+    // Автоматическая отправка результатов в Google Form
+    submitToGoogleForm(score, total);
+  }
+
+  function submitToGoogleForm(score, total) {
+    const name = document.getElementById("studentName").value.trim();
+    const group = document.getElementById("studentGroup").value.trim() || "1-ИИЭиГО-25ИАИТ-113М";
+    const topic = "PCA: финансовый риск, wine, печь (практики 3–4)";
+    const percent = Math.round((score / total) * 100);
+
+    // Заполняем скрытые поля формы
+    document.getElementById("gf_name").value = name || "Без имени";
+    document.getElementById("gf_group").value = group;
+    document.getElementById("gf_topic").value = topic;
+    document.getElementById("gf_score").value = `${score}/${total} (${percent}%)`;
+
+    // Отправка формы в новое окно/вкладку
+    document.getElementById("googleForm").submit();
+  }
+
+  function resetQuiz() {
+    // Сброс выбора
+    const inputs = document.querySelectorAll(".question input[type='radio'], .question input[type='checkbox']");
+    inputs.forEach(inp => inp.checked = false);
+
+    // Сброс обратной связи
+    const feedbacks = document.querySelectorAll(".feedback");
+    feedbacks.forEach(fb => {
+      fb.style.display = "none";
+      fb.textContent = "";
+      fb.className = "feedback";
+    });
+
+    // Сброс результата
+    const resultEl = document.getElementById("result");
+    resultEl.style.display = "none";
+    resultEl.textContent = "";
+  }
+
+  document.getElementById("checkBtn").addEventListener("click", evaluateQuiz);
+  document.getElementById("resetBtn").addEventListener("click", resetQuiz);
+</script>
+</body>
+</html>

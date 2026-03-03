@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>PCA — Практики 1–4 (исправлено)</title>
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+  <!-- Reveal.js core CSS -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <!-- Theme -->
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css"
+        id="theme">
+
+  <style>
+    .reveal section {
+      font-size: 26px;
+      line-height: 1.35;
+    }
+    .term {
+      color: #ffd166;
+      font-weight: 600;
+    }
+    table.simple {
+      border-collapse: collapse;
+      margin: 0 auto;
+      font-size: 22px;
+    }
+    table.simple th, table.simple td {
+      border: 1px solid #ccc;
+      padding: 4px 10px;
+      text-align: center;
+    }
+    .small {
+      font-size: 20px;
+    }
+    .code {
+      font-family: "Fira Code", "Consolas", monospace;
+      font-size: 20px;
+      background: #111;
+      padding: 10px;
+      border-radius: 5px;
+    }
+    textarea {
+      font-family: "Fira Code", "Consolas", monospace;
+    }
+  </style>
+
+  <!-- MathJax 3 (простые формулы) -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" defer></script>
+</head>
+<body>
+<div class="reveal">
+  <div class="slides">
+
+    <!-- ===================== ОБЩЕЕ ВВЕДЕНИЕ ===================== -->
+    <section>
+      <h2>Анализ главных компонент (PCA)</h2>
+      <h3>Практические занятия 1–4</h3>
+      <p>Специальность: анализ данных / большие данные, нейросети, ИИ</p>
+      <p class="small">
+        От геометрической интуиции в 2D до многомерных практических задач
+        (финансовые индикаторы, качество вина).
+      </p>
+    </section>
+
+    <!-- ===================== ПРАКТИКА 1 ===================== -->
+    <section>
+      <h2>Практика 1</h2>
+      <h3>Интуиция PCA на простом 2D примере</h3>
+      <p class="small">
+        Цель: увидеть, как PCA «находит диагональ» и зачем нужна главная компонента.
+      </p>
+    </section>
+
+    <section>
+      <h3>Базовые понятия</h3>
+      <ul>
+        <li><span class="term">Наблюдение</span> (sample) — строка матрицы данных.</li>
+        <li><span class="term">Признак</span> (feature) — столбец матрицы данных.</li>
+        <li>Матрица X размера n × d: n наблюдений, d признаков. [web:14][web:38]</li>
+        <li><span class="term">Цель PCA</span> — найти новые координаты, где первые компоненты объясняют максимум дисперсии. [web:14][web:17]</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>Простой двумерный пример (ручной разбор)</h3>
+      <p>6 точек (условно: рост и вес):</p>
+      <table class="simple">
+        <tr><th>№</th><th>Рост</th><th>Вес</th></tr>
+        <tr><td>1</td><td>1.0</td><td>1.1</td></tr>
+        <tr><td>2</td><td>2.0</td><td>1.9</td></tr>
+        <tr><td>3</td><td>3.0</td><td>3.0</td></tr>
+        <tr><td>4</td><td>4.0</td><td>3.9</td></tr>
+        <tr><td>5</td><td>5.0</td><td>5.1</td></tr>
+        <tr><td>6</td><td>6.0</td><td>5.9</td></tr>
+      </table>
+      <p class="small">
+        Точки лежат примерно вдоль диагонали рост ≈ вес — это направление первой главной компоненты.
+      </p>
+    </section>
+
+    <section>
+      <h3>Ковариационная матрица (идея)</h3>
+      <ul>
+        <li>Центрируем каждый признак (вычитаем среднее).</li>
+        <li>Считаем дисперсии и ковариации, получаем ковариационную матрицу 2 × 2.</li>
+        <li>Её собственные векторы дают направления главных компонент. [web:14][web:17]</li>
+        <li>Собственные значения — дисперсия вдоль этих направлений.</li>
+      </ul>
+    </section>
+
+    <!-- ----- Калькулятор 1: 2D ----- -->
+    <section>
+      <h3>Калькулятор PCA (2D‑пример)</h3>
+      <p class="small">
+        Введите данные (строка — наблюдение, значения через пробел). Начните с примера ниже.
+      </p>
+
+      <textarea id="pca-input-1" style="width: 100%; height: 180px;">
+1 1.1
+2 1.9
+3 3.0
+4 3.9
+5 5.1
+6 5.9
+      </textarea>
+
+      <p class="small">
+        <button id="pca-run-btn-1">Посчитать PCA (2 компоненты)</button>
+      </p>
+
+      <div id="pca-output-1" class="small"
+           style="background:#111; padding:10px; border-radius:5px; white-space:pre-wrap;"></div>
+    </section>
+
+    <!-- ===================== ПРАКТИКА 2 ===================== -->
+    <section>
+      <h2>Практика 2</h2>
+      <h3>Стандартизация и объяснённая дисперсия</h3>
+      <p class="small">
+        Цель: понять роль масштабов признаков и научиться читать explained variance. [web:38]
+      </p>
+    </section>
+
+    <section>
+      <h3>Разные масштабы признаков</h3>
+      <p>Пример: рост (см) и доход (тыс. руб./мес).</p>
+      <table class="simple">
+        <tr><th>№</th><th>Рост, см</th><th>Доход, тыс. руб.</th></tr>
+        <tr><td>1</td><td>160</td><td>45</td></tr>
+        <tr><td>2</td><td>170</td><td>60</td></tr>
+        <tr><td>3</td><td>180</td><td>120</td></tr>
+        <tr><td>4</td><td>190</td><td>150</td></tr>
+      </table>
+      <ul class="small">
+        <li>Без стандартизации PCA тяготеет к признаку с наибольшим масштабом.</li>
+        <li>При стандартизации (z‑оценки) все признаки приводятся к сопоставимому масштабу. [web:38]</li>
+      </ul>
+    </section>
+
+    <section>
+      <h3>Стандартизация признаков</h3>
+      <ul>
+        <li>Из каждого признака вычитаем среднее.</li>
+        <li>Делим на стандартное отклонение.</li>
+        <li>После этого дисперсия каждого признака ≈ 1, и PCA отражает структуру корреляций. [web:38]</li>
+      </ul>
+    </section>
+
+    <!-- ----- Калькулятор 2: стандартизация + explained variance ----- -->
+    <section>
+      <h3>Калькулятор PCA c опцией стандартизации</h3>
+      <p class="small">
+        Введите многомерные данные (например, рост и доход).
+      </p>
+
+      <textarea id="pca-input-2" style="width:100%; height:180px;">
+160 45
+170 60
+180 120
+190 150
+      </textarea>
+
+      <p class="small">
+        <label>
+          <input type="checkbox" id="pca-standardize-2" checked>
+          Стандартизировать признаки (z‑оценки)
+        </label>
+      </p>
+
+      <p class="small">
+        <button id="pca-run-btn-2">PCA + объяснённая дисперсия</button>
+      </p>
+
+      <div id="pca-output-2" class="small"
+           style="background:#111; padding:10px; border-radius:5px; white-space:pre-wrap;"></div>
+    </section>
+
+    <section>
+      <h3>Объяснённая дисперсия</h3>
+      <ul>
+        <li>Каждое собственное значение λᵢ — дисперсия по i‑й главной компоненте.</li>
+        <li>Доля объяснённой дисперсии: λᵢ / Σ λⱼ.</li>
+        <li>Накопленная доля: сумма первых k долей.</li>
+        <li>Выбор числа компонент: минимальное k, дающее ≥ 90–95% дисперсии. [web:38]</li>
+      </ul>
+    </section>
+
+    <!-- ===================== ПРАКТИКА 3 ===================== -->
+    <section>
+      <h2>Практика 3</h2>
+      <h3>Многопараметрическая задача: риск клиента банка</h3>
+      <p class="small">
+        Цель: сжать 5 финансовых индикаторов в 2–3 «фактора риска» и
+        интерпретировать их. Такие идеи используются в скоринге и управлении портфелем. [web:38]
+      </p>
+    </section>
+
+    <section>
+      <h3>Признаки риска (пример)</h3>
+      <ul>
+        <li>F1: доля просроченных платежей.</li>
+        <li>F2: отношение долга к доходу (debt‑to‑income ratio).</li>
+        <li>F3: число активных кредитных линий.</li>
+        <li>F4: вариативность ежемесячного баланса.</li>
+        <li>F5: доля использованного кредитного лимита.</li>
+      </ul>
+      <p class="small">
+        F1, F2, F4, F5 часто коррелированы → PCA выделяет общий «фактор риска».
+      </p>
+    </section>
+
+    <!-- ----- Калькулятор 3: финансовый риск ----- -->
+    <section>
+      <h3>Калькулятор PCA: финансовый риск</h3>
+      <p class="small">
+        Введите F1–F5 для клиентов (строка — клиент).
+      </p>
+
+      <textarea id="pca-input-3" style="width:100%; height:200px;">
+0.10 0.30 3  0.20 0.50
+0.05 0.25 2  0.15 0.45
+0.30 0.70 6  0.40 0.90
+0.25 0.65 5  0.35 0.85
+0.02 0.10 1  0.05 0.20
+0.15 0.50 4  0.30 0.70
+      </textarea>
+
+      <p class="small">
+        <label>
+          <input type="checkbox" id="pca-standardize-3" checked>
+          Стандартизировать признаки
+        </label>
+      </p>
+
+      <p class="small">
+        <button id="pca-run-btn-3">PCA → факторы риска (PC1, PC2)</button>
+      </p>
+
+      <div id="pca-output-3" class="small"
+           style="background:#111; padding:10px; border-radius:5px; white-space:pre-wrap;"></div>
+    </section>
+
+    <section>
+      <h3>Интерпретация факторов риска</h3>
+      <ul>
+        <li>Смотрим на веса признаков в первом собственном векторе.</li>
+        <li>Если F1, F2, F4, F5 имеют большие положительные веса — PC1 ≈ общий риск.</li>
+        <li>PC2 может отделять клиентов с разной структурой долга при схожем общем уровне риска.</li>
+        <li>Задача студентам: модифицировать данные и смотреть, как меняются веса и координаты клиентов.</li>
+      </ul>
+    </section>
+
+    <!-- ===================== ПРАКТИКА 4 ===================== -->
+    <section>
+      <h2>Практика 4</h2>
+      <h3>Высокая размерность: wine‑подобные данные</h3>
+      <p class="small">
+        Wine‑dataset: 13 химических признаков вина, PCA → проекция в 2D для визуализации сортов. [web:41][web:43]
+      </p>
+    </section>
+
+    <section>
+      <h3>Признаки вина (пример)</h3>
+      <ul class="small">
+        <li>Alcohol, Malic acid, Ash, Alcalinity of ash, Magnesium…</li>
+        <li>Total phenols, Flavanoids, Nonflavanoid phenols, Proanthocyanins.</li>
+        <li>Color intensity, Hue, OD280/OD315, Proline — всего 13 признаков. [web:41]</li>
+        <li>Задача: сжать 13 → 2, получить «карту вин» в PC1–PC2. [web:43]</li>
+      </ul>
+    </section>
+
+    <!-- ----- Калькулятор 4: wine‑подобные данные ----- -->
+    <section>
+      <h3>Калькулятор PCA: многомерные данные (wine‑подобный пример)</h3>
+      <p class="small">
+        Введите N строк, каждая — до 13 признаков. Ниже — игрушечный пример с 5 признаками.
+      </p>
+
+      <textarea id="pca-input-4" style="width:100%; height:220px;">
+13.2  2.7  2.5  18.0  1000
+12.8  2.4  2.1  17.5   980
+13.9  1.8  2.0  15.0  1200
+12.3  2.2  1.9  16.0   870
+13.5  2.6  2.4  19.0  1100
+      </textarea>
+
+      <p class="small">
+        <label>
+          <input type="checkbox" id="pca-standardize-4" checked>
+          Стандартизировать признаки
+        </label>
+        &nbsp;&nbsp;
+        Число компонент k:
+        <input type="number" id="pca-k-4" value="2" min="1" max="13" style="width:60px;">
+      </p>
+
+      <p class="small">
+        <button id="pca-run-btn-4">
+          PCA → объяснённая дисперсия и проекции
+        </button>
+      </p>
+
+      <div id="pca-output-4" class="small"
+           style="background:#111; padding:10px; border-radius:5px; white-space:pre-wrap;"></div>
+    </section>
+
+    <section>
+      <h3>Интерпретация Wine‑PCA</h3>
+      <ul class="small">
+        <li>Scatter‑график PC1–PC2 показывает кластеры сортов вина. [web:41][web:43]</li>
+        <li>По весам признаков в PC1 видно, какие соединения сильнее всего разделяют сорта (часто alcohol, color intensity). [web:41]</li>
+        <li>Практика: выгрузите реальные wine‑данные из scikit‑learn и подайте сюда в виде текста, затем сравните веса и координаты с Python. [web:38]</li>
+      </ul>
+    </section>
+
+    <!-- ===================== ЗАКЛЮЧЕНИЕ ===================== -->
+    <section>
+      <h2>Дальнейшие шаги</h2>
+      <ul class="small">
+        <li>Связь PCA и SVD: разложение X = UΣVᵀ. [web:38]</li>
+        <li>Kernel PCA для нелинейных структур. [web:40]</li>
+        <li>Сравнение с t‑SNE и UMAP для визуализации. [web:40]</li>
+        <li>Мини‑проект: применить PCA к собственным данным (эксперимент, финансы, производство).</li>
+      </ul>
+    </section>
+
+  </div>
+</div>
+
+<!-- Reveal.js core -->
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+<!-- Plugins -->
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/markdown/markdown.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/notes/notes.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/math/math.js"></script>
+
+<!-- PCA-JS -->
+<script src="https://cdn.jsdelivr.net/npm/pca-js@1.0.0/pca.min.js"></script>
+
+<script>
+  // ---------- Вспомогательные функции ----------
+
+  function parseData(text) {
+    const lines = text.trim().split(/\r?\n/);
+    const data = [];
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      const parts = line.trim().split(/[\s,;]+/);
+      const nums = parts.map(Number).filter(v => !Number.isNaN(v));
+      if (nums.length > 0) data.push(nums);
+    }
+    return data;
+  }
+
+  // Стандартизация по столбцам
+  function standardizeMatrix(data) {
+    const n = data.length;
+    const d = data[0].length;
+    const means = new Array(d).fill(0);
+    const variances = new Array(d).fill(0);
+
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < d; j++) {
+        means[j] += data[i][j];
+      }
+    }
+    for (let j = 0; j < d; j++) {
+      means[j] /= n;
+    }
+
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < d; j++) {
+        const diff = data[i][j] - means[j];
+        variances[j] += diff * diff;
+      }
+    }
+    for (let j = 0; j < d; j++) {
+      variances[j] = n > 1 ? variances[j] / (n - 1) : 0;
+    }
+
+    const stds = variances.map(v => Math.sqrt(v));
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const row = [];
+      for (let j = 0; j < d; j++) {
+        if (stds[j] === 0 || !isFinite(stds[j])) {
+          row.push(0);
+        } else {
+          row.push((data[i][j] - means[j]) / stds[j]);
+        }
+      }
+      out.push(row);
+    }
+    return { data: out, means, stds };
+  }
+
+  // Собственные значения из векторов pca-js
+  function eigenvaluesFromVectors(vectors) {
+    // vectors: [{ eigenvalue: ..., vector: [...] }, ...] [web:37][web:32][web:35]
+    return vectors.map(v => v.eigenvalue);
+  }
+
+  function explainedVariance(eigenvalues) {
+    const total = eigenvalues.reduce((a, b) => a + b, 0);
+    return eigenvalues.map(v => total === 0 ? 0 : v / total);
+  }
+
+  // Проекция данных на первые k собственных векторов
+  function projectData(data, vectors, k) {
+    const n = data.length;
+    const d = data[0].length;
+    const kk = Math.min(k, vectors.length, d);
+    const W = [];
+    for (let i = 0; i < kk; i++) {
+      W.push(vectors[i].vector); // массив длины d
+    }
+    const projections = [];
+    for (let i = 0; i < n; i++) {
+      const row = [];
+      for (let c = 0; c < kk; c++) {
+        const v = W[c];
+        let dot = 0;
+        for (let j = 0; j < d; j++) {
+          dot += data[i][j] * v[j];
+        }
+        row.push(dot);
+      }
+      projections.push(row);
+    }
+    return { projections, kk, W };
+  }
+
+  // ---------- Инициализация Reveal + обработчики ----------
+
+  Reveal.initialize({
+    hash: true,
+    slideNumber: true,
+    transition: 'fade',
+    width: 1280,
+    height: 720,
+    plugins: [ RevealMarkdown, RevealNotes, RevealHighlight, RevealMath.MathJax3 ]
+  });
+
+  Reveal.addEventListener('ready', function () {
+
+    // Калькулятор 1: 2D
+    (function () {
+      const btn = document.getElementById('pca-run-btn-1');
+      const input = document.getElementById('pca-input-1');
+      const out = document.getElementById('pca-output-1');
+      if (!btn || !input || !out) return;
+
+      btn.addEventListener('click', function () {
+        const data = parseData(input.value);
+        if (!data.length) {
+          out.textContent = 'Ошибка: не удалось прочитать данные.';
+          return;
+        }
+        if (data[0].length < 2) {
+          out.textContent = 'Нужно минимум 2 признака.';
+          return;
+        }
+
+        try {
+          const vectors = PCA.getEigenVectors(data);
+          const eigenvalues = eigenvaluesFromVectors(vectors);
+          const ev = explainedVariance(eigenvalues);
+          const projRes = projectData(data, vectors, 2);
+
+          let text = '';
+          text += 'Размерность: ' + data.length + ' наблюдений × ' + data[0].length + ' признаков\n\n';
+          text += 'Собственные значения:\n' + JSON.stringify(eigenvalues, null, 2) + '\n\n';
+          text += 'Доли объяснённой дисперсии:\n' + JSON.stringify(ev, null, 2) + '\n\n';
+          text += 'Первые 2 собственных вектора:\n' + JSON.stringify(projRes.W, null, 2) + '\n\n';
+          text += 'Координаты наблюдений в пространстве (PC1, PC2):\n' + JSON.stringify(projRes.projections, null, 2) + '\n';
+          out.textContent = text;
+        } catch (e) {
+          out.textContent = 'Ошибка при вычислении PCA: ' + e;
+        }
+      });
+    })();
+
+    // Калькулятор 2: стандартизация + explained variance
+    (function () {
+      const btn = document.getElementById('pca-run-btn-2');
+      const input = document.getElementById('pca-input-2');
+      const out = document.getElementById('pca-output-2');
+      const chb = document.getElementById('pca-standardize-2');
+      if (!btn || !input || !out || !chb) return;
+
+      btn.addEventListener('click', function () {
+        let data = parseData(input.value);
+        if (!data.length) {
+          out.textContent = 'Ошибка: не удалось прочитать данные.';
+          return;
+        }
+        if (data[0].length < 2) {
+          out.textContent = 'Нужно минимум 2 признака.';
+          return;
+        }
+
+        let info = '';
+        if (chb.checked) {
+          const stdRes = standardizeMatrix(data);
+          data = stdRes.data;
+          info += 'Признаки стандартизированы (z‑оценки).\n\n';
+        } else {
+          info += 'Признаки НЕ стандартизированы.\n\n';
+        }
+
+        try {
+          const vectors = PCA.getEigenVectors(data);
+          const eigenvalues = eigenvaluesFromVectors(vectors);
+          const ev = explainedVariance(eigenvalues);
+          const cumulative = [];
+          let sum = 0;
+          for (let i = 0; i < ev.length; i++) {
+            sum += ev[i];
+            cumulative.push(sum);
+          }
+
+          let text = '';
+          text += info;
+          text += 'Собственные значения:\n' + JSON.stringify(eigenvalues, null, 2) + '\n\n';
+          text += 'Доли объяснённой дисперсии:\n' + JSON.stringify(ev, null, 2) + '\n\n';
+          text += 'Накопленная доля:\n' + JSON.stringify(cumulative, null, 2) + '\n';
+          out.textContent = text;
+        } catch (e) {
+          out.textContent = 'Ошибка при вычислении PCA: ' + e;
+        }
+      });
+    })();
+
+    // Калькулятор 3: финансовый риск
+    (function () {
+      const btn = document.getElementById('pca-run-btn-3');
+      const input = document.getElementById('pca-input-3');
+      const out = document.getElementById('pca-output-3');
+      const chb = document.getElementById('pca-standardize-3');
+      if (!btn || !input || !out || !chb) return;
+
+      btn.addEventListener('click', function () {
+        let data = parseData(input.value);
+        if (!data.length) {
+          out.textContent = 'Ошибка: не удалось прочитать данные.';
+          return;
+        }
+        if (data[0].length < 2) {
+          out.textContent = 'Нужно минимум 2 признака.';
+          return;
+        }
+
+        let info = '';
+        if (chb.checked) {
+          const stdRes = standardizeMatrix(data);
+          data = stdRes.data;
+          info += 'Признаки стандартизированы.\n\n';
+        } else {
+          info += 'Внимание: признаки НЕ стандартизированы, масштаб может искажать результат.\n\n';
+        }
+
+        try {
+          const vectors = PCA.getEigenVectors(data);
+          const eigenvalues = eigenvaluesFromVectors(vectors);
+          const ev = explainedVariance(eigenvalues);
+          const projRes = projectData(data, vectors, 2);
+
+          let text = '';
+          text += info;
+          text += 'Собственные значения:\n' + JSON.stringify(eigenvalues, null, 2) + '\n\n';
+          text += 'Доли объяснённой дисперсии:\n' + JSON.stringify(ev, null, 2) + '\n\n';
+          text += 'Весовые коэффициенты по признакам F1–F5 (eigenvectors):\n';
+          text += JSON.stringify(vectors.map(v => v.vector), null, 2) + '\n\n';
+          text += 'Координаты клиентов в пространстве (PC1, PC2):\n';
+          text += JSON.stringify(projRes.projections, null, 2) + '\n';
+          out.textContent = text;
+        } catch (e) {
+          out.textContent = 'Ошибка при вычислении PCA: ' + e;
+        }
+      });
+    })();
+
+    // Калькулятор 4: wine‑подобные данные
+    (function () {
+      const btn = document.getElementById('pca-run-btn-4');
+      const input = document.getElementById('pca-input-4');
+      const out = document.getElementById('pca-output-4');
+      const chb = document.getElementById('pca-standardize-4');
+      const kInput = document.getElementById('pca-k-4');
+      if (!btn || !input || !out || !chb || !kInput) return;
+
+      btn.addEventListener('click', function () {
+        let data = parseData(input.value);
+        if (!data.length) {
+          out.textContent = 'Ошибка: не удалось прочитать данные.';
+          return;
+        }
+        const d = data[0].length;
+        if (d < 2) {
+          out.textContent = 'Нужно минимум 2 признака.';
+          return;
+        }
+
+        let k = parseInt(kInput.value, 10);
+        if (!Number.isInteger(k) || k < 1) k = 1;
+        if (k > d) k = d;
+
+        let info = '';
+        if (chb.checked) {
+          const stdRes = standardizeMatrix(data);
+          data = stdRes.data;
+          info += 'Признаки стандартизированы.\n\n';
+        } else {
+          info += 'Для wine‑подобных данных стандартизация очень желательна.\n\n';
+        }
+
+        try {
+          const vectors = PCA.getEigenVectors(data);
+          const eigenvalues = eigenvaluesFromVectors(vectors);
+          const ev = explainedVariance(eigenvalues);
+          const cumulative = [];
+          let sum = 0;
+          for (let i = 0; i < ev.length; i++) {
+            sum += ev[i];
+            cumulative.push(sum);
+          }
+
+          const projRes = projectData(data, vectors, k);
+
+          let text = '';
+          text += info;
+          text += 'Собственные значения:\n' + JSON.stringify(eigenvalues, null, 2) + '\n\n';
+          text += 'Доли объяснённой дисперсии:\n' + JSON.stringify(ev, null, 2) + '\n\n';
+          text += 'Накопленная доля:\n' + JSON.stringify(cumulative, null, 2) + '\n\n';
+          text += 'Используем k = ' + projRes.kk + ' компонент.\n\n';
+          text += 'Первые k собственных векторов (веса признаков):\n';
+          text += JSON.stringify(projRes.W, null, 2) + '\n\n';
+          text += 'Проекции наблюдений в пространстве первых k компонент:\n';
+          text += JSON.stringify(projRes.projections, null, 2) + '\n';
+
+          out.textContent = text;
+        } catch (e) {
+          out.textContent = 'Ошибка при вычислении PCA: ' + e;
+        }
+      });
+    })();
+
+  });
+</script>
+
+</body>
+</html>
