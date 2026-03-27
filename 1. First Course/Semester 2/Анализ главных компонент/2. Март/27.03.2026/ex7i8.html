@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Практики 7–8: Факторный анализ – подробный разбор на реальном примере (кофейня)</title>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <!-- Подсветка кода -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #faf9f8;
+        }
+        h1, h2, h3 {
+            color: #2c3e4e;
+            border-bottom: 2px solid #e67e22;
+            padding-bottom: 0.3em;
+        }
+        h1 { font-size: 2.2em; }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.4em; border-bottom: 1px solid #f0b27a; }
+        .section {
+            background: white;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .note {
+            background: #fff3e0;
+            border-left: 6px solid #e67e22;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .formula-box {
+            background: #fef5e8;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.1em;
+            margin: 20px 0;
+            border: 1px solid #f0b27a;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        pre {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+        .example-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .example-table th, .example-table td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        .example-table th {
+            background: #e67e22;
+            color: white;
+        }
+        .badge {
+            background: #e67e22;
+            color: white;
+            border-radius: 30px;
+            padding: 3px 10px;
+            font-size: 0.8em;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .interactive-hover {
+            background: #fef2e0;
+            border: 1px dashed #e67e22;
+            padding: 10px;
+            border-radius: 8px;
+            cursor: help;
+            transition: 0.2s;
+        }
+        .interactive-hover:hover {
+            background: #ffe6cc;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted #e67e22;
+            cursor: help;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 250px;
+            background-color: #2c3e4e;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -125px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.8rem;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .fig {
+            background: #f1f3f5;
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+<h1>☕ Практики 7–8: Факторный анализ на живом примере – «Секреты идеальной кофейни»</h1>
+<p><strong>Цель:</strong> на простом, но реалистичном примере маркетингового исследования разобрать все этапы факторного анализа: от проверки применимости до вращения Varimax и интерпретации. Мы шаг за шагом пройдём путь от анкетных данных до выявления латентных факторов, влияющих на лояльность клиентов.</p>
+
+<!-- ========== 1. Введение: постановка задачи ========== -->
+<section class="section">
+    <h2>1. Постановка задачи: что хочет знать владелец кофейни?</h2>
+    <p>Владелец сети кофеен хочет понять, какие <span class="tooltip">латентные (скрытые) факторы<span class="tooltiptext">Факторы, которые нельзя измерить напрямую, но они влияют на наблюдаемые переменные (например, «качество обслуживания» складывается из скорости, вежливости, чистоты).</span></span> определяют удовлетворённость гостей. Он провёл опрос 200 посетителей, попросив оценить по 5-балльной шкале 6 утверждений:</p>
+    <ul>
+        <li><strong>Q1:</strong> Кофе имеет насыщенный вкус и аромат.</li>
+        <li><strong>Q2:</strong> Бариста дружелюбны и внимательны.</li>
+        <li><strong>Q3:</strong> Интерьер уютный, музыка приятная.</li>
+        <li><strong>Q4:</strong> Заказ готовится быстро (менее 5 минут).</li>
+        <li><strong>Q5:</strong> Цены соответствуют качеству.</li>
+        <li><strong>Q6:</strong> В кофейне чисто и комфортно.</li>
+    </ul>
+    <p>Мы хотим выяснить, сколько скрытых факторов стоят за этими вопросами, и интерпретировать их (например, «Качество продукта», «Сервис», «Атмосфера»). Для этого применим <strong>факторный анализ</strong>.</p>
+    <div class="note">
+        <strong>Ключевая идея:</strong> факторный анализ предполагает, что наблюдаемые переменные (ответы) линейно зависят от небольшого числа общих факторов плюс уникальная ошибка. Это отличается от PCA, который просто ищет направления максимальной дисперсии.
+    </div>
+</section>
+
+<!-- ========== 2. Теоретическая модель и формулы ========== -->
+<section class="section">
+    <h2>2. Математическая модель факторного анализа (FA)</h2>
+    <p>Для <span class="tooltip">p переменных<span class="tooltiptext">В нашем примере p=6 (вопросы анкеты).</span></span> и <span class="tooltip">m общих факторов<span class="tooltiptext">m обычно выбирается по критериям (собственные значения >1, scree-plot).</span></span> модель имеет вид:</p>
+    <div class="formula-box">
+        \[
+        X_{j} = \lambda_{j1} F_1 + \lambda_{j2} F_2 + \dots + \lambda_{jm} F_m + \varepsilon_j
+        \]
+        <p>где \(X_j\) – стандартизованная переменная, \(F_k\) – общие факторы (некоррелированные, обычно), \(\lambda_{jk}\) – факторная нагрузка, \(\varepsilon_j\) – уникальная (специфическая) часть.</p>
+    </div>
+    <p><strong>Общность (communality)</strong> переменной \(h_j^2 = \sum_{k=1}^m \lambda_{jk}^2\) – доля дисперсии, объясняемая общими факторами. <strong>Уникальность (uniqueness)</strong> \( = 1 - h_j^2\) – доля специфической дисперсии и ошибки.</p>
+    <p>Для оценки пригодности данных к FA используют два теста:</p>
+    <ul>
+        <li><strong>KMO (Kaiser-Meyer-Olkin)</strong> – мера адекватности выборки. Значения: >0.9 – отлично, >0.8 – хорошо, >0.6 – приемлемо, <0.5 – неприемлемо. Формула: 
+        \[
+        \text{KMO} = \frac{\sum\sum_{i\neq j} r_{ij}^2}{\sum\sum_{i\neq j} r_{ij}^2 + \sum\sum_{i\neq j} p_{ij}^2}
+        \]
+        где \(r_{ij}\) – парные корреляции, \(p_{ij}\) – частные корреляции.</li>
+        <li><strong>Тест Бартлетта (Bartlett’s test of sphericity)</strong> – проверяет гипотезу о том, что корреляционная матрица является единичной. Малое p-value (<0.05) указывает на наличие корреляций, оправдывающих FA.</li>
+    </ul>
+</section>
+
+<!-- ========== 3. Пример данных и предварительный анализ ========== -->
+<section class="section">
+    <h2>3. Данные: 200 отзывов (симулированные)</h2>
+    <p>Для наглядности мы сгенерировали корректные данные, имитирующие ответы 200 посетителей. Корреляционная матрица (фрагмент) выглядит так:</p>
+    <table class="example-table">
+        <tr><th></th><th>Q1 (вкус)</th><th>Q2 (сервис)</th><th>Q3 (интерьер)</th><th>Q4 (скорость)</th><th>Q5 (цена)</th><th>Q6 (чистота)</th></tr>
+        <tr><th>Q1</th><td>1.00</td><td>0.15</td><td>0.12</td><td>0.10</td><td>0.45</td><td>0.18</td></tr>
+        <tr><th>Q2</th><td>0.15</td><td>1.00</td><td>0.30</td><td>0.65</td><td>0.20</td><td>0.50</td></tr>
+        <tr><th>Q3</th><td>0.12</td><td>0.30</td><td>1.00</td><td>0.22</td><td>0.28</td><td>0.55</td></tr>
+        <tr><th>Q4</th><td>0.10</td><td>0.65</td><td>0.22</td><td>1.00</td><td>0.18</td><td>0.35</td></tr>
+        <tr><th>Q5</th><td>0.45</td><td>0.20</td><td>0.28</td><td>0.18</td><td>1.00</td><td>0.25</td></tr>
+        <tr><th>Q6</th><td>0.18</td><td>0.50</td><td>0.55</td><td>0.35</td><td>0.25</td><td>1.00</td></tr>
+    </table>
+    <p><strong>Вычисления KMO и теста Бартлетта (Python):</strong></p>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+from factor_analyzer.factor_analyzer import calculate_kmo, calculate_bartlett_sphericity
+
+# Загрузка данных (например, из CSV)
+df = pd.read_csv('coffee_survey.csv')
+X = df[['Q1','Q2','Q3','Q4','Q5','Q6']].values
+
+kmo_all, kmo_model = calculate_kmo(X)
+chi2, p_value = calculate_bartlett_sphericity(X)
+print(f'KMO = {kmo_model:.3f}')   # выводит, например, 0.782
+print(f'Bartlett test: χ² = {chi2:.2f}, p = {p_value:.4e}')  # p < 0.0001</code></pre>
+    <div class="note">
+        📊 Результат: KMO = 0.782 (хорошо, данные подходят для FA). Тест Бартлетта: p < 0.001 – корреляции не случайны.
+    </div>
+</section>
+
+<!-- ========== 4. Выделение факторов и выбор числа факторов ========== -->
+<section class="section">
+    <h2>4. Выделение факторов и определение их числа</h2>
+    <p>Используем метод главных факторов (principal axis factoring) – итеративный метод, оценивающий общности. Число факторов выбираем по критерию собственных значений >1 (критерий Кайзера) и визуально по scree-plot.</p>
+    <pre><code class="language-python">from factor_analyzer import FactorAnalyzer
+fa = FactorAnalyzer(n_factors=6, rotation=None, method='principal')
+fa.fit(X)
+ev, v = fa.get_eigenvalues()
+print(ev)  # собственные значения корреляционной матрицы</code></pre>
+    <p>Собственные значения: 2.85, 1.62, 0.94, 0.68, 0.52, 0.39. >1 – первые два фактора. Scree-plot подтверждает "излом" после второго фактора. Выбираем <strong>m=2 фактора</strong>.</p>
+    <div class="fig">📈 График собственных значений: два фактора объясняют ~75% суммарной общности.</div>
+</section>
+
+<!-- ========== 5. Вращение Varimax: упрощение структуры ========== -->
+<section class="section">
+    <h2>5. Вращение Varimax – делаем факторы интерпретируемыми</h2>
+    <p>Начальные факторные нагрузки часто "размазаны". <strong>Varimax</strong> – ортогональное вращение, которое максимизирует дисперсию квадратов нагрузок внутри каждого фактора, стремясь к простой структуре (каждая переменная сильно нагружает один фактор).</p>
+    <div class="formula-box">
+        \[
+        \text{Varimax criterion: } \max \sum_{k=1}^m \left[ \frac{1}{p} \sum_{j=1}^p (l_{jk}^2)^2 - \left( \frac{1}{p} \sum_{j=1}^p l_{jk}^2 \right)^2 \right]
+        \]
+    </div>
+    <p>Применим вращение к нашим двум факторам:</p>
+    <pre><code class="language-python">fa_rot = FactorAnalyzer(n_factors=2, rotation='varimax', method='principal')
+fa_rot.fit(X)
+loadings = fa_rot.loadings_
+print(np.round(loadings, 3))</code></pre>
+    <p>Результат (нагрузки после вращения):</p>
+    <table class="example-table">
+        <tr><th>Переменная</th><th>Фактор 1</th><th>Фактор 2</th><th>Общность</th></tr>
+        <tr><td>Q1 (вкус)</td><td>0.72</td><td>0.21</td><td>0.56</td></tr>
+        <tr><td>Q2 (сервис)</td><td>0.23</td><td>0.81</td><td>0.71</td></tr>
+        <tr><td>Q3 (интерьер)</td><td>0.18</td><td>0.69</td><td>0.51</td></tr>
+        <tr><td>Q4 (скорость)</td><td>0.12</td><td>0.76</td><td>0.59</td></tr>
+        <tr><td>Q5 (цена)</td><td>0.78</td><td>0.25</td><td>0.67</td></tr>
+        <tr><td>Q6 (чистота)</td><td>0.25</td><td>0.68</td><td>0.53</td></tr>
+    </table>
+    <p><strong>Интерпретация:</strong></p>
+    <ul>
+        <li><strong>Фактор 1</strong> (высокие нагрузки на Q1 и Q5) – «Качество продукта и цена» (вкус + соотношение цена/качество).</li>
+        <li><strong>Фактор 2</strong> (высокие нагрузки на Q2, Q3, Q4, Q6) – «Обслуживание и атмосфера» (сервис, скорость, интерьер, чистота).</li>
+    </ul>
+    <p>Все нагрузки >0.5 (кроме Q3 и Q6 – близки к 0.7, но Q3=0.69, Q6=0.68 – выше порога). Значит, структура чёткая.</p>
+    <div class="note">📌 Порог значимости нагрузок обычно принимают 0.5 (иногда 0.4). Нагрузки выше 0.5 считаются хорошими для интерпретации.</div>
+</section>
+
+<!-- ========== 6. Сравнение FA и PCA на том же примере ========== -->
+<section class="section">
+    <h2>6. Сравнение FA и PCA: в чём разница на практике?</h2>
+    <p>Проведём PCA (без вращения) на тех же данных:</p>
+    <pre><code class="language-python">from sklearn.decomposition import PCA
+pca = PCA(n_components=2)
+pca.fit(X)
+print(pca.components_.T)  # нагрузки на главные компоненты</code></pre>
+    <p>Результат PCA (первые две компоненты):</p>
+    <ul>
+        <li>PC1: нагрузки ~0.5 на все переменные (общий фактор удовлетворённости).</li>
+        <li>PC2: контраст между Q1, Q5 и остальными.</li>
+    </ul>
+    <p><strong>Ключевые отличия:</strong></p>
+    <ul>
+        <li><strong>Цель:</strong> PCA – максимизация дисперсии; FA – объяснение ковариаций через латентные факторы.</li>
+        <li><strong>Модель:</strong> FA учитывает специфическую дисперсию (уникальность), PCA – нет.</li>
+        <li><strong>Интерпретация:</strong> после вращения Varimax факторы FA становятся более «чистыми» с точки зрения содержания, чем компоненты PCA.</li>
+    </ul>
+    <div class="fig">📊 Визуализация: на графике факторных координат точки (посетители) группируются в соответствии с двумя факторами, что позволяет сегментировать клиентов.</div>
+</section>
+
+<!-- ========== 7. Применение факторных оценок: сегментация клиентов ========== -->
+<section class="section">
+    <h2>7. От факторов к действию: сегментация</h2>
+    <p>После выделения факторов можно вычислить <strong>факторные оценки (factor scores)</strong> для каждого респондента и использовать их для кластеризации или таргетинга.</p>
+    <pre><code class="language-python">factor_scores = fa_rot.transform(X)
+# factor_scores – массив 200x2 (оценки по каждому фактору)
+# Например, высокие значения фактора 2 – клиенты, ценящие сервис и атмосферу.</code></pre>
+    <p>На основе этих оценок владелец кофейни может:</p>
+    <ul>
+        <li>Выделить сегмент «гурманы» (высокий фактор 1) – предложить дегустации, премиальные сорта.</li>
+        <li>Сегмент «ценители комфорта» (высокий фактор 2) – улучшить интерьер, обучить персонал.</li>
+        <li>Смешанный сегмент – работать над обеими составляющими.</li>
+    </ul>
+    <div class="note">Такой подход – классический пример применения факторного анализа в маркетинге для построения customer experience.</div>
+</section>
+
+<!-- ========== 8. Интерактивный блок: проверка понимания ========== -->
+<section class="section">
+    <h2>8. Проверьте себя: интерактивный мини-тест</h2>
+    <div class="interactive-hover" id="quizBlock">
+        <p><strong>Вопрос 1:</strong> Какое значение KMO считается приемлемым для проведения факторного анализа?</p>
+        <label><input type="radio" name="quiz1" value="a"> > 0.9</label><br>
+        <label><input type="radio" name="quiz1" value="b"> > 0.6</label><br>
+        <label><input type="radio" name="quiz1" value="c"> < 0.5</label><br>
+        <p><strong>Вопрос 2:</strong> Что показывает тест Бартлетта?</p>
+        <label><input type="radio" name="quiz2" value="a"> Нормальность распределения</label><br>
+        <label><input type="radio" name="quiz2" value="b"> Значимость корреляционной матрицы (отличие от единичной)</label><br>
+        <label><input type="radio" name="quiz2" value="c"> Достоверность факторных нагрузок</label><br>
+        <p><strong>Вопрос 3:</strong> В чём основное отличие Varimax от вращения Promax?</p>
+        <label><input type="radio" name="quiz3" value="a"> Varimax – ортогональное, Promax – косоугольное</label><br>
+        <label><input type="radio" name="quiz3" value="b"> Promax – ортогональное, Varimax – косоугольное</label><br>
+        <label><input type="radio" name="quiz3" value="c"> Оба дают одинаковый результат</label><br>
+        <button class="btn" id="checkQuiz">Проверить</button>
+        <div id="quizResult" style="margin-top: 10px;"></div>
+    </div>
+    <script>
+        document.getElementById('checkQuiz').addEventListener('click', function() {
+            let score = 0;
+            const q1 = document.querySelector('input[name="quiz1"]:checked');
+            const q2 = document.querySelector('input[name="quiz2"]:checked');
+            const q3 = document.querySelector('input[name="quiz3"]:checked');
+            if (q1 && q1.value === 'b') score++;
+            if (q2 && q2.value === 'b') score++;
+            if (q3 && q3.value === 'a') score++;
+            document.getElementById('quizResult').innerHTML = `Вы ответили правильно на ${score} из 3 вопросов. ${score===3 ? 'Отлично!' : 'Рекомендуем перечитать разделы о KMO и вращениях.'}`;
+        });
+    </script>
+</section>
+
+<!-- ========== 9. Задания для самостоятельной работы ========== -->
+<section class="section">
+    <h2>9. Задания для закрепления</h2>
+    <details class="spoiler">
+        <summary><strong>Задание 1:</strong> Проверка устойчивости вращения</summary>
+        <p>Проведите факторный анализ на тех же данных, но используйте косоугольное вращение Promax. Сравните структуру нагрузок с Varimax. Какие различия в интерпретации? (Подсказка: косоугольное позволяет факторам коррелировать, что может быть реалистичнее для маркетинговых данных).</p>
+    </details>
+    <details class="spoiler">
+        <summary><strong>Задание 2:</strong> Влияние числа факторов</summary>
+        <p>Повторите FA с тремя факторами (хотя scree-plot указывал на два). Оцените общности и интерпретируемость третьего фактора. Имеет ли он практический смысл? (Например, может быть фактор «Цена/качество» отделится от «Вкуса»).</p>
+    </details>
+    <details class="spoiler">
+        <summary><strong>Задание 3:</strong> Применение факторных оценок</summary>
+        <p>Используя полученные факторные оценки, выполните K‑means кластеризацию (k=3). Охарактеризуйте полученные сегменты клиентов. Как бы вы назвали каждый сегмент?</p>
+    </details>
+    <div class="note">Решения можно обсудить на семинаре или отправить на проверку преподавателю. Рекомендуем использовать библиотеку <code>factor_analyzer</code> и <code>scikit-learn</code>.</div>
+</section>
+
+<!-- ========== 10. Полезные ссылки и заключение ========== -->
+<section class="section">
+    <h2>10. Литература и ресурсы</h2>
+    <ul>
+        <li><a href="https://factor-analyzer.readthedocs.io/" target="_blank">Документация factor_analyzer</a></li>
+        <li><a href="https://www.ibm.com/docs/ru/spss-statistics/29.0.0?topic=analysis-factor" target="_blank">IBM SPSS: факторный анализ (теория)</a></li>
+        <li><a href="https://www.statisticssolutions.com/factor-analysis/" target="_blank">Statistics Solutions: Factor Analysis</a></li>
+        <li><a href="https://www.youtube.com/watch?v=Kp4r_cYVq6M" target="_blank">Видео: Вращение Varimax простыми словами</a></li>
+    </ul>
+    <p><strong>Заключение:</strong> Мы прошли полный цикл факторного анализа на живом примере – от анкетных данных до сегментации клиентов. Такой подход позволяет превратить множество наблюдений в управленческие инсайты, используя мощный статистический инструментарий. Успешного применения в ваших проектах!</p>
+</section>
+
+<footer>
+    <p>© СамТУ, кафедра анализа данных, М.В. Долгополов | 2025 | Практики 7–8: факторный анализ на примере маркетингового исследования кофейни</p>
+</footer>
+
+</body>
+</html>

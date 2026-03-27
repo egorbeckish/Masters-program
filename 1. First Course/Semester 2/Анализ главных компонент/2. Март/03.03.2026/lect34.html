@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Лекции 3 и 4 — PCA: Explained Variance, Scree-plot, Biplot</title>
+
+  <!-- Reveal.js -->
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/reveal.css">
+  <link rel="stylesheet" href="https://unpkg.com/reveal.js/dist/theme/white.css" id="theme">
+
+  <script src="https://unpkg.com/reveal.js/dist/reveal.js"></script>
+  <script src="https://unpkg.com/reveal.js/plugin/math/math.js"></script>
+
+  <style>
+    .accent { color:#007acc; font-weight:bold; }
+    .small { font-size:0.8em; }
+    .code { font-family: "Fira Code", "Consolas", monospace; font-size:0.8em; }
+    .two-col { display:flex; gap:2rem; align-items:flex-start; }
+    .two-col > div { flex:1; }
+    .en { color:#555; font-style:italic; }
+    .box { border-left:4px solid #007acc; padding-left:10px; margin:10px 0; }
+    .calc-box { border:1px solid #ccc; border-radius:6px; padding:10px; margin:10px 0; }
+    input[type="text"], textarea {
+      width:100%;
+      box-sizing:border-box;
+      font-family:inherit;
+      font-size:0.8em;
+      padding:4px 6px;
+      margin:4px 0;
+    }
+    button {
+      padding:4px 10px;
+      font-size:0.8em;
+      cursor:pointer;
+      border-radius:4px;
+      border:1px solid #007acc;
+      background-color:#007acc;
+      color:white;
+    }
+    button:disabled {
+      opacity:0.6;
+      cursor:default;
+    }
+    .result { font-size:0.8em; margin-top:6px; white-space:pre-wrap; }
+    .quiz-question { margin-bottom:8px; }
+    .quiz-option { font-size:0.8em; margin:3px 0; }
+    .quiz-feedback { font-size:0.8em; margin-top:4px; }
+  </style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- =========================================
+     ТИТУЛЬНЫЙ СЛАЙД
+========================================== -->
+<section>
+  <h2>PCA — Лекции 3 и 4</h2>
+  <h3>Explained Variance, Scree‑plot, Biplot</h3>
+  <p class="small">
+    <span class="accent">PCA</span> — Principal Component Analysis (анализ главных компонент).<br>
+    Лекция 3: дисперсия и выбор числа компонент.<br>
+    Лекция 4: biplot и интерпретация компонент.
+  </p>
+  <p class="small">
+    Полезные ресурсы:<br>
+    – <a href="https://builtin.com/data-science/step-step-explanation-principal-component-analysis" target="_blank">BuiltIn: Step-by-step PCA</a><br>
+    – <a href="https://www.jcchouinard.com/pca-scree-plot/" target="_blank">JC Chouinard: Scree Plot with PCA</a><br>
+    – <a href="https://www.jcchouinard.com/python-pca-biplots-machine-learning/" target="_blank">JC Chouinard: PCA Biplots in Python</a><br>
+    – <a href="https://scikit-learn.org/stable/auto_examples/decomposition/plot_pca_iris.html" target="_blank">scikit‑learn: PCA on Iris</a><br>
+    – <a href="https://www.kaggle.com/code/prashantkumarsundge/understanding-pca-in-details" target="_blank">Kaggle: Understanding PCA in details</a>
+  </p>
+</section>
+
+<!-- =========================================
+     СЛОВАРЬ ТЕРМИНОВ
+========================================== -->
+<section>
+  <h3>Словарь сокращений и терминов</h3>
+  <ul class="small">
+    <li><span class="accent">PCA</span> — Principal Component Analysis, анализ главных компонент.</li>
+    <li><span class="accent">PC</span> — Principal Component, главная компонента, вектор в пространстве признаков.</li>
+    <li><span class="accent">Scores</span> — координаты объектов в пространстве главных компонент, строки матрицы \(Z\).</li>
+    <li><span class="accent">Loadings</span> — веса признаков в компонентах, столбцы матрицы \(W\) (собственные векторы ковариационной матрицы).</li>
+    <li><span class="accent">EV</span> — Eigenvalue, собственное значение.</li>
+    <li><span class="accent">EVR</span> — Explained Variance Ratio, доля объяснённой дисперсии.</li>
+    <li><span class="accent">Scree‑plot</span> — график собственных значений или EVR по номеру компоненты.</li>
+    <li><span class="accent">Biplot</span> — график, где одновременно показаны scores (объекты) и loadings (признаки) в пространстве компонент.</li>
+    <li><span class="accent">Whitening</span> — «выбеливание»; линейное преобразование, делающее ковариационную матрицу близкой к единичной.</li>
+  </ul>
+</section>
+
+<!-- =========================================
+     ЛЕКЦИЯ 3: ЦЕЛИ
+========================================== -->
+<section>
+  <h3>Лекция 3: цели</h3>
+  <ul class="small">
+    <li>Формально и интуитивно понять, что такое <span class="accent">объяснённая дисперсия</span>.</li>
+    <li>Освоить scree‑plot и cumulative EVR для выбора числа компонент.</li>
+    <li>Разобрать реальные примеры (Iris, Wine) и увидеть, как разные критерии дают разные \(k\).</li>
+    <li>Попробовать «пощупать» EVR через интерактивный калькулятор.</li>
+  </ul>
+</section>
+
+<!-- =========================================
+     ОБЪЯСНЁННАЯ ДИСПЕРСИЯ — МАТЕМАТИКА
+========================================== -->
+<section>
+  <h3>Explained variance: формальные определения</h3>
+  <ul class="small">
+    <li>Пусть ковариационная матрица:
+      \[
+        S = \frac{1}{n-1}\tilde{X}^\top \tilde{X},
+      \]
+      её собственные значения \(\lambda_1 \ge \dots \ge \lambda_p\).
+    </li>
+    <li>Общая дисперсия:
+      \[
+        \mathrm{TotalVar} = \sum_{i=1}^p \lambda_i.
+      \]
+    </li>
+    <li>Доля дисперсии, объяснённая компонентой \(k\):
+      \[
+        \mathrm{EVR}_k = \frac{\lambda_k}{\sum_{i=1}^p \lambda_i}.
+      \]
+    </li>
+    <li>Кумулятивная доля дисперсии:
+      \[
+        \mathrm{CumEVR}_k = \sum_{i=1}^k \mathrm{EVR}_i.
+      \]
+    </li>
+  </ul>
+</section>
+
+<!-- =========================================
+     ОБЪЯСНЁННАЯ ДИСПЕРСИЯ — ИНТУИЦИЯ
+========================================== -->
+<section>
+  <h3>Explained variance: интуиция</h3>
+  <ul class="small">
+    <li>Каждая PC — это направление, вдоль которого точки «разбросаны» максимально широко.</li>
+    <li>\(\lambda_k\) — дисперсия данных при проекции на направление \(w_k\).</li>
+    <li>EVR говорит, какую долю общей изменчивости данных мы сохраняем, если смотрим только на компоненту \(k\).</li>
+    <li>Чем больше суммарный EVR первых \(k\) компонент, тем меньше информации теряется при переходе в \(k\)-мерное подпространство.</li>
+  </ul>
+</section>
+
+<!-- =========================================
+     ИНТЕРАКТИВ: КАЛЬКУЛЯТОР EVR
+========================================== -->
+<section>
+  <h3>Интерактив: калькулятор EVR</h3>
+  <div class="small">
+    <p>Введите собственные значения (через пробел или запятую), например: <span class="code">4.0 1.0 0.5 0.2</span>.</p>
+    <div class="calc-box">
+      <textarea id="ev-input" rows="3" placeholder="4.0 1.0 0.5 0.2"></textarea>
+      <button onclick="calcEVR()">Посчитать EVR и CumEVR</button>
+      <div id="ev-output" class="result"></div>
+    </div>
+    <p class="small">
+      Пример: если \(\lambda = (4,1,0.5,0.2)\), то EVR\(_1\) ≈ 68%, EVR\(_2\) ≈ 17%, EVR\(_3\) ≈ 9%, EVR\(_4\) ≈ 3%.
+    </p>
+  </div>
+</section>
+
+<!-- =========================================
+     SCREE-PLOT — ИДЕЯ
+========================================== -->
+<section>
+  <h3>Scree‑plot: идея</h3>
+  <ul class="small">
+    <li>Scree‑plot — график \(\lambda_i\) или \(\mathrm{EVR}_i\) по номеру компоненты \(i\).</li>
+    <li>Смотрим на «колено» кривой: после него добавление компонент даёт малый прирост объяснённой дисперсии.</li>
+    <li>Для Iris scree‑plot показывает, что первые 2 компоненты уже объясняют большую часть вариации.</li>
+    <li>Рекомендуемый разбор scree‑plot: 
+      <a href="https://www.jcchouinard.com/pca-scree-plot/" target="_blank">How to Make a Scree Plot with Python</a>.
+    </li>
+  </ul>
+</section>
+
+<!-- =========================================
+     IRIS: SCREE-PLOT (КОД)
+========================================== -->
+<section>
+  <h3>Iris: scree‑plot (код на Python)</h3>
+  <pre class="code"><code>
+from sklearn.decomposition import PCA
+from sklearn.datasets import load_iris
+import matplotlib.pyplot as plt
+
+iris = load_iris()
+X = iris["data"]
+
+pca = PCA().fit(X)
+eigvals = pca.explained_variance_
+evr = pca.explained_variance_ratio_
+cum_evr = evr.cumsum()
+
+fig, ax = plt.subplots(1, 2, figsize=(10, 4))
+
+ax[0].plot(range(1, len(eigvals)+1), eigvals, marker="o")
+ax[0].set_xlabel("Компонента")
+ax[0].set_ylabel("λ (собственное значение)")
+ax[0].set_title("Scree-plot (Iris)")
+
+ax[1].plot(range(1, len(cum_evr)+1), cum_evr, marker="o")
+ax[1].set_xlabel("k")
+ax[1].set_ylabel("CumEVR")
+ax[1].set_title("Cumulative EVR (Iris)")
+
+plt.tight_layout()
+plt.show()
+  </code></pre>
+  <p class="small">
+    См. также пример в документации scikit‑learn:
+    <a href="https://scikit-learn.org/stable/auto_examples/decomposition/plot_pca_iris.html" target="_blank">
+      PCA on Iris
+    </a>.
+  </p>
+</section>
+
+<!-- =========================================
+     ВЫБОР ЧИСЛА КОМПОНЕНТ: КРИТЕРИИ
+========================================== -->
+<section>
+  <h3>Выбор числа компонент: критерии</h3>
+  <ul class="small">
+    <li><span class="accent">Критерий доли дисперсии.</span> Выбираем минимальное \(k\), для которого \(\mathrm{CumEVR}_k \ge \tau\), где \(\tau\) — порог (например, 0.9 или 0.95).</li>
+    <li><span class="accent">Критерий «колена» scree‑plot.</span> Ищем визуальный излом на графике \(\lambda_i\), после которого значения убывают медленно.</li>
+    <li><span class="accent">Критерий Kaiser (для стандартизованных данных).</span> Берём компоненты, у которых \(\lambda_i &gt; 1\) (для данных с единичной дисперсией признаков).</li>
+    <li>В реальных задачах критерии комбинируют с доменной интерпретацией и требованиями к визуализации.</li>
+  </ul>
+</section>
+
+<!-- =========================================
+     WINE: ПРИМЕР ВЫБОРА k
+========================================== -->
+<section>
+  <h3>Wine: пример выбора числа компонент</h3>
+  <pre class="code"><code>
+from sklearn.datasets import load_wine
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+
+wine = load_wine()
+Xw = wine["data"]
+
+pca_w = PCA().fit(Xw)
+eigvals_w = pca_w.explained_variance_
+evr_w = pca_w.explained_variance_ratio_
+cum_evr_w = evr_w.cumsum()
+
+print("EVR:", evr_w)
+print("CumEVR:", cum_evr_w)
+k90 = (cum_evr_w >= 0.9).argmax() + 1
+print("k для CumEVR ≥ 0.9:", k90)
+  </code></pre>
+  <p class="small">
+    Сравните, сколько компонент нужно для 90% дисперсии на Iris и на Wine: на Wine обычно требуется больше компонент, т.к. исходная размерность выше и структура сложнее.
+  </p>
+</section>
+
+<!-- =========================================
+     МИНИ-ВОПРОС (КВИЗ) ПО ЛЕКЦИИ 3
+========================================== -->
+<section>
+  <h3>Мини‑вопрос (EVR и scree‑plot)</h3>
+  <div class="quiz-question small">
+    Для набора данных PCA дало собственные значения \(\lambda = (5, 2, 1, 0.2)\). Какое из утверждений верно?
+  </div>
+  <div class="small">
+    <label class="quiz-option"><input type="radio" name="q3" value="a">
+      a) Первая компонента объясняет менее 25% дисперсии.
+    </label><br>
+    <label class="quiz-option"><input type="radio" name="q3" value="b">
+      b) Две первые компоненты объясняют более 70% дисперсии.
+    </label><br>
+    <label class="quiz-option"><input type="radio" name="q3" value="c">
+      c) Scree‑plot, скорее всего, имеет «колено» после третьей компоненты.
+    </label><br>
+    <label class="quiz-option"><input type="radio" name="q3" value="d">
+      d) Все компоненты вносят одинаковый вклад в дисперсию.
+    </label><br>
+    <button onclick="checkQ3()">Проверить</button>
+    <div id="q3-feedback" class="quiz-feedback"></div>
+  </div>
+</section>
+
+<!-- =========================================
+     ЛЕКЦИЯ 4: ЦЕЛИ
+========================================== -->
+<section>
+  <h3>Лекция 4: цели</h3>
+  <ul class="small">
+    <li>Осознать, что такое <span class="accent">biplot</span> и зачем он нужен.</li>
+    <li>Научиться читать biplot: стрелки‑признаки, облако объектов, углы и длины.</li>
+    <li>Разобрать biplot для Iris и Wine, увидеть, как интерпретации зависят от предметной области.</li>
+    <li>Обсудить типичные ошибки и некорректные интерпретации.</li>
+  </ul>
+</section>
+
+<!-- =========================================
+     BIPLOT — ОПРЕДЕЛЕНИЕ
+========================================== -->
+<section>
+  <h3>Biplot: определение</h3>
+  <ul class="small">
+    <li>Пусть после PCA имеем:
+      \[
+        Z = \tilde{X} W, \quad Z \in \mathbb{R}^{n \times p}, \quad W \in \mathbb{R}^{p \times p}.
+      \]
+      Рассмотрим первые две компоненты: \(Z_{(2)} \in \mathbb{R}^{n \times 2}\), \(W_{(2)} \in \mathbb{R}^{p \times 2}\).
+    </li>
+    <li><span class="accent">Scores</span> — точки \((z_{i1}, z_{i2})\), \(i=1,\dots,n\): объекты в координатах PC1–PC2.</li>
+    <li><span class="accent">Loadings</span> — векторы \((w_{j1}, w_{j2})\), \(j=1,\dots,p\): признаки в том же пространстве.</li>
+    <li>Biplot — совместный график scores и loadings в плоскости первых компонент.</li>
+  </ul>
+</section>
+
+<!-- =========================================
+     BIPLOT — ИНТУИЦИЯ
+========================================== -->
+<section>
+  <h3>Biplot: как его читать</h3>
+  <ul class="small">
+    <li>Стрелка признака показывает направление увеличения значения признака.</li>
+    <li>Длина стрелки пропорциональна тому, насколько признак хорошо «виден» в пространстве первых компонент (по модулю корреляции с компонентами).</li>
+    <li>Угол между стрелками приблизительно соответствует корреляции: маленький угол — сильная положительная корреляция, угол ~90° — слабая связь, ~180° — отрицательная корреляция.</li>
+    <li>Положение кластеров объектов относительно стрелок говорит, какие признаки их отличают.</li>
+  </ul>
+</section>
+
+<!-- =========================================
+     IRIS: BIPLOT (КОД)
+========================================== -->
+<section>
+  <h3>Iris: biplot (код)</h3>
+  <pre class="code"><code>
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.decomposition import PCA
+from sklearn.datasets import load_iris
+
+iris = load_iris()
+X = iris["data"]
+y = iris["target"]
+features = iris["feature_names"]
+
+Xc = X - X.mean(axis=0, keepdims=True)
+pca = PCA(n_components=2)
+Z = pca.fit_transform(Xc)      # scores (n×2)
+W = pca.components_.T          # loadings (p×2)
+
+plt.figure(figsize=(7, 7))
+plt.scatter(Z[:, 0], Z[:, 1], c=y, cmap="viridis", alpha=0.7)
+
+for i, f in enumerate(features):
+    plt.arrow(0, 0, W[i, 0]*3, W[i, 1]*3, color="r", head_width=0.05)
+    plt.text(W[i, 0]*3.2, W[i, 1]*3.2, f, color="r")
+
+plt.xlabel("PC1")
+plt.ylabel("PC2")
+plt.axhline(0, color="grey", linewidth=0.5)
+plt.axvline(0, color="grey", linewidth=0.5)
+plt.title("PCA Biplot (Iris)")
+plt.grid(True, alpha=0.2)
+plt.show()
+  </code></pre>
+  <p class="small">
+    Подробный разбор: 
+    <a href="https://www.jcchouinard.com/python-pca-biplots-machine-learning/" target="_blank">
+      How to Make PCA Biplots in Python
+    </a>.
+  </p>
+</section>
+
+<!-- =========================================
+     IRIS: BIPLOT — ИНТЕРПРЕТАЦИЯ
+========================================== -->
+<section>
+  <h3>Iris: интерпретация biplot</h3>
+  <ul class="small">
+    <li>Стрелки лепестков (petal length/width) обычно тянут вдоль PC1: PC1 ≈ «размер лепестков».</li>
+    <li>Стрелки чашелистиков (sepal) больше влияют на PC2: PC2 ≈ «пропорции чашелистик/лепесток».</li>
+    <li>Setosa часто отделена от остальных по PC1 и/или PC2, Versicolor и Virginica частично перекрываются.</li>
+    <li>Это уже даёт биологический смысл компонентам: не просто «абстрактная ось», а конкретный морфологический фактор.</li>
+  </ul>
+</section>
+
+<!-- =========================================
+     WINE: BIPLOT — ИДЕЯ
+========================================== -->
+<section>
+  <h3>Wine: идея biplot</h3>
+  <ul class="small">
+    <li>Датасет Wine: химические параметры вин (алкоголь, кислоты, минералы и т.п.).</li>
+    <li>PCA позволяет выделить компоненты, связанные, например, с «общей насыщенностью», «кислотностью», «минеральностью».</li>
+    <li>Biplot в PC1–PC2 помогает увидеть, какие признаки отличают сорта (classes 0, 1, 2) и насколько они разделимы.</li>
+    <li>Отличная площадка для самостоятельного исследования и попытки интерпретировать каждую компоненту в химических терминах.</li>
+  </ul>
+</section>
+
+<!-- =========================================
+     МИНИ-ИНТЕРАКТИВ: ПРОСТОЙ 2D PCA
+========================================== -->
+<section>
+  <h3>Интерактив: простой 2D PCA (3 точки)</h3>
+  <div class="small">
+    <p>Введите три точки в \(\mathbb{R}^2\) в формате: <span class="code">x1 y1; x2 y2; x3 y3</span><br>
+       Например: <span class="code">1 2; 2 3; 3 4</span>.</p>
+    <div class="calc-box">
+      <textarea id="pca2d-input" rows="3" placeholder="1 2; 2 3; 3 4"></textarea>
+      <button onclick="calcPCA2D()">Посчитать PCA</button>
+      <div id="pca2d-output" class="result"></div>
+    </div>
+    <p class="small">
+      Скрипт вычисляет центр, ковариационную матрицу, собственные значения и первую главную компоненту (направление).
+    </p>
+  </div>
+</section>
+
+<!-- =========================================
+     МИНИ-ВОПРОС (КВИЗ) ПО BIPLOT
+========================================== -->
+<section>
+  <h3>Мини‑вопрос (biplot)</h3>
+  <div class="quiz-question small">
+    Какие утверждения о biplot верны?
+  </div>
+  <div class="small">
+    <label class="quiz-option"><input type="checkbox" name="q4" value="a">
+      a) Стрелки соответствуют исходным признакам и показывают их вклад в компоненты.
+    </label><br>
+    <label class="quiz-option"><input type="checkbox" name="q4" value="b">
+      b) Точки‑объекты отображаются в координатах главных компонент (scores).
+    </label><br>
+    <label class="quiz-option"><input type="checkbox" name="q4" value="c">
+      c) Biplot можно строить только для данных с ровно двумя признаками.
+    </label><br>
+    <label class="quiz-option"><input type="checkbox" name="q4" value="d">
+      d) Угол между стрелками приблизительно отражает корреляцию между признаками.
+    </label><br>
+    <button onclick="checkQ4()">Проверить</button>
+    <div id="q4-feedback" class="quiz-feedback"></div>
+  </div>
+</section>
+
+<!-- =========================================
+     ТИПИЧНЫЕ ОШИБКИ И ИНТЕРПРЕТАЦИЯ
+========================================== -->
+<section>
+  <h3>Типичные ошибки при интерпретации PCA/biplot</h3>
+  <ul class="small">
+    <li>Считать, что PC1 всегда имеет физически осмысленную интерпретацию — иногда это чисто математический компромисс разных эффектов.</li>
+    <li>Игнорировать масштабирование признаков: без стандартизации признаки с большой дисперсией доминируют.</li>
+    <li>Переинтерпретировать biplot: заключать о причинно‑следственных связях, видя только корреляции и геометрию.</li>
+    <li>Забывать о том, что biplot в PC1–PC2 не показывает вклад признаков в последующие компоненты.</li>
+  </ul>
+</section>
+
+<!-- =========================================
+     ИТОГ ЛЕКЦИЙ 3 И 4
+========================================== -->
+<section>
+  <h3>Итог лекций 3 и 4</h3>
+  <ul class="small">
+    <li>Explained variance / EVR — количественная мера того, сколько вариации захватывает каждая компонента.</li>
+    <li>Scree‑plot и cumulative EVR — ключевые инструменты выбора числа компонент.</li>
+    <li>Biplot — мощный визуальный метод совместной интерпретации объектов и признаков.</li>
+    <li>Интерактивные калькуляторы и небольшие численные примеры помогают «почувствовать» PCA, а не только выучить формулы.</li>
+  </ul>
+</section>
+
+</div>
+</div>
+
+<script>
+  // Калькулятор EVR
+  function parseEigenvalues(text) {
+    return text
+      .replace(/[,;]/g, ' ')
+      .split(/\s+/)
+      .map(function(v){ return parseFloat(v); })
+      .filter(function(v){ return !isNaN(v); });
+  }
+
+  function calcEVR() {
+    var text = document.getElementById('ev-input').value.trim();
+    if (!text) {
+      document.getElementById('ev-output').textContent = "Введите хотя бы одно собственное значение.";
+      return;
+    }
+    var vals = parseEigenvalues(text);
+    if (vals.length === 0) {
+      document.getElementById('ev-output').textContent = "Не удалось распознать числа.";
+      return;
+    }
+    var sum = vals.reduce(function(a,b){ return a + b; }, 0);
+    if (sum === 0) {
+      document.getElementById('ev-output').textContent = "Сумма собственных значений равна нулю.";
+      return;
+    }
+    var evr = vals.map(function(l){ return l / sum; });
+    var cum = [];
+    evr.reduce(function(acc, v, i){
+      var s = acc + v;
+      cum.push(s);
+      return s;
+    }, 0);
+
+    var lines = [];
+    lines.push("Собственные значения λ: " + vals.map(function(v){return v.toFixed(4);}).join(", "));
+    lines.push("EVR (доля дисперсии): " + evr.map(function(v){return (v*100).toFixed(1) + "%";}).join(", "));
+    lines.push("CumEVR: " + cum.map(function(v){return (v*100).toFixed(1) + "%";}).join(", "));
+    document.getElementById('ev-output').textContent = lines.join("\n");
+  }
+
+  // Интерактивный 2D PCA (3 точки)
+  function calcPCA2D() {
+    var text = document.getElementById('pca2d-input').value.trim();
+    if (!text) {
+      document.getElementById('pca2d-output').textContent = "Введите 3 точки в формате: x1 y1; x2 y2; x3 y3";
+      return;
+    }
+    // Разбираем по ';'
+    var parts = text.split(';');
+    if (parts.length < 3) {
+      document.getElementById('pca2d-output').textContent = "Нужно минимум 3 точки, разделённые ';'.";
+      return;
+    }
+    var points = [];
+    for (var i=0; i<3; i++) {
+      var nums = parts[i].trim().split(/\s+/).map(function(v){return parseFloat(v);});
+      if (nums.length !== 2 || isNaN(nums[0]) || isNaN(nums[1])) {
+        document.getElementById('pca2d-output').textContent = "Каждая точка должна быть формата: x y. Ошибка в точке #" + (i+1);
+        return;
+      }
+      points.push(nums);
+    }
+    // Матрица 3x2
+    var x1 = points[0], x2 = points[1], x3 = points[2];
+    // Центр
+    var meanX = (x1[0] + x2[0] + x3[0]) / 3.0;
+    var meanY = (x1[1] + x2[1] + x3[1]) / 3.0;
+
+    var xc = [
+      [x1[0]-meanX, x1[1]-meanY],
+      [x2[0]-meanX, x2[1]-meanY],
+      [x3[0]-meanX, x3[1]-meanY]
+    ];
+
+    // Ковариационная матрица S = (1/(n-1)) Xc^T Xc, n=3
+    var s11 = 0, s12 = 0, s22 = 0;
+    for (var j=0; j<3; j++) {
+      s11 += xc[j][0]*xc[j][0];
+      s12 += xc[j][0]*xc[j][1];
+      s22 += xc[j][1]*xc[j][1];
+    }
+    s11 /= 2.0;
+    s12 /= 2.0;
+    s22 /= 2.0;
+
+    // Собственные значения/векторы 2x2 вручную
+    // Решаем det(S - λI)=0 => λ^2 - (s11+s22)λ + (s11*s22 - s12^2)=0
+    var tr = s11 + s22;
+    var det = s11*s22 - s12*s12;
+    var disc = tr*tr - 4*det;
+    if (disc < 0) disc = 0;
+    var sqrtDisc = Math.sqrt(disc);
+    var lambda1 = (tr + sqrtDisc)/2;
+    var lambda2 = (tr - sqrtDisc)/2;
+
+    // Собственный вектор для lambda1: (S-λI)v=0 => (s11-λ)v1 + s12 v2 = 0
+    var v1x, v1y;
+    if (Math.abs(s12) > 1e-12) {
+      v1x = 1;
+      v1y = -(s11 - lambda1)/s12;
+    } else {
+      // ковариация ~0: оси почти независимы
+      if (s11 >= s22) { v1x = 1; v1y = 0; }
+      else { v1x = 0; v1y = 1; }
+    }
+    var norm = Math.sqrt(v1x*v1x + v1y*v1y);
+    if (norm > 0) { v1x /= norm; v1y /= norm; }
+
+    var out = [];
+    out.push("Центр: (" + meanX.toFixed(3) + ", " + meanY.toFixed(3) + ")");
+    out.push("Ковариационная матрица S:");
+    out.push("[" + s11.toFixed(3) + "  " + s12.toFixed(3) + "]");
+    out.push("[" + s12.toFixed(3) + "  " + s22.toFixed(3) + "]");
+    out.push("Собственные значения: λ1=" + lambda1.toFixed(4) + ", λ2=" + lambda2.toFixed(4));
+    out.push("Первая главная компонента (направление): v = (" + v1x.toFixed(4) + ", " + v1y.toFixed(4) + ")");
+    document.getElementById('pca2d-output').textContent = out.join("\n");
+  }
+
+  // Мини-квиз по лекции 3
+  function checkQ3() {
+    var radios = document.getElementsByName("q3");
+    var val = null;
+    for (var i=0;i<radios.length;i++){
+      if (radios[i].checked) { val = radios[i].value; break; }
+    }
+    var fb = document.getElementById("q3-feedback");
+    if (!val) {
+      fb.textContent = "Выберите один вариант.";
+      fb.style.color = "";
+      return;
+    }
+    // λ=(5,2,1,0.2): суммарная ~8.2; EVR1~61%; EVR1+EVR2~85%; колено часто после 2 компоненты.
+    if (val === "b") {
+      fb.textContent = "Верно: две первые компоненты дают существенную долю дисперсии (>70%).";
+      fb.style.color = "green";
+    } else {
+      fb.textContent = "Неверно. Пересчитайте EVR и CumEVR для λ=(5,2,1,0.2).";
+      fb.style.color = "darkred";
+    }
+  }
+
+  // Мини-квиз по biplot
+  function checkQ4() {
+    var boxes = document.getElementsByName("q4");
+    var selected = [];
+    for (var i=0;i<boxes.length;i++){
+      if (boxes[i].checked) selected.push(boxes[i].value);
+    }
+    var fb = document.getElementById("q4-feedback");
+    if (selected.length === 0) {
+      fb.textContent = "Выберите хотя бы один вариант.";
+      fb.style.color = "";
+      return;
+    }
+    // Правильные: a, b, d
+    var correct = ["a","b","d"];
+    selected.sort();
+    correct.sort();
+    var ok = (selected.length === correct.length &&
+              selected.every(function(v,i){return v===correct[i];}));
+    if (ok) {
+      fb.textContent = "Верно: a, b и d описывают основные элементы biplot.";
+      fb.style.color = "green";
+    } else {
+      fb.textContent = "Частично верно. Вспомните, что biplot можно строить для любой размерности, не только 2 признаков.";
+      fb.style.color = "darkred";
+    }
+  }
+
+  // Инициализация Reveal
+  Reveal.initialize({
+    hash: true,
+    slideNumber: true,
+    transition: 'fade',
+    width: 1280,
+    height: 720,
+    mathjax3: {
+      mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js',
+      tex: {
+        inlineMath: [ ['\\(', '\\)'] ],
+        displayMath: [ ['\\[', '\\]'] ]
+      },
+      options: {
+        skipHtmlTags: [ 'script', 'noscript', 'style', 'textarea', 'pre', 'code' ]
+      }
+    },
+    plugins: [ RevealMath.MathJax3 ]
+  });
+</script>
+
+</body>
+</html>

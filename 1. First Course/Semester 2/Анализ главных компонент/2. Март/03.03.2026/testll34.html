@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Тест: постановка задач PCA (лекции 3 и 4)</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px 10px 40px;
+      line-height: 1.5;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 0.2em;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 0.85em;
+      color: #555;
+      margin-bottom: 1.2em;
+    }
+    #quiz-container {
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 16px;
+    }
+    .question-block {
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px dashed #ccc;
+    }
+    .question-text {
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .small {
+      font-size: 0.85em;
+      color: #555;
+    }
+    .option {
+      font-size: 0.9em;
+      margin: 3px 0;
+    }
+    button {
+      margin-top: 15px;
+      padding: 8px 16px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 4px;
+      border: 1px solid #007acc;
+      background-color: #007acc;
+      color: white;
+    }
+    button:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+    #feedback {
+      margin-top: 12px;
+      font-weight: 500;
+    }
+    .correct {
+      color: #008000;
+    }
+    .incorrect {
+      color: #c00000;
+    }
+    #score {
+      margin-top: 10px;
+      font-weight: 600;
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 0.7em;
+      color: #666;
+      text-align: center;
+      border-top: 1px solid #eee;
+      padding-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Постановка задач PCA</h1>
+<div class="subtitle">
+  Закрепление материалов лекций 3 и 4: explained variance, scree‑plot, выбор числа компонент, biplot и интерпретация.
+</div>
+
+<div id="quiz-container">
+  <div id="questions"></div>
+  <button id="submit-btn">Проверить ответы</button>
+  <div id="feedback"></div>
+  <div id="score"></div>
+</div>
+
+<div class="footer">
+  СамГТУ, магистранты, курс 1, «Анализ данных: Анализ главных компонент». Лектор: М. В. Долгополов
+</div>
+
+<script>
+  const quizData = [
+    {
+      id: "q1",
+      type: "multi",
+      question: "В каких формулировках правильно поставлена общая цель применения PCA по лекциям 3–4?",
+      help: "Отражаем идею: сжатие размерности, объяснённая дисперсия, интерпретация компонент.",
+      answers: [
+        { text: "“Найти линейные комбинации признаков, которые объясняют основную долю дисперсии данных и позволяют сократить размерность с минимальной потерей информации.”", correct: true },
+        { text: "“Свести любой датасет к двум случайным признакам для красивой картинки, не задумываясь о смысле.”", correct: false },
+        { text: "“Выделить главные компоненты, которые можно интерпретировать как скрытые факторы предметной области (например, «размер объекта», «тяжесть заболевания»).”", correct: true },
+        { text: "“Избавиться от всех исходных признаков и использовать только одну компоненту, независимо от доли объяснённой дисперсии.”", correct: false }
+      ]
+    },
+    {
+      id: "q2",
+      type: "single",
+      question: "Какая формулировка цели постановки задачи для scree‑plot наиболее корректна?",
+      help: "",
+      answers: [
+        { text: "“Построить scree‑plot, чтобы доказать, что число компонент всегда равно двум.”", correct: false },
+        { text: "“Построить scree‑plot, чтобы визуально обнаружить ‘колено’ убывания собственных значений и обосновать разумное число компонент k.”", correct: true },
+        { text: "“Построить scree‑plot, чтобы проверить нормальность распределения исходных признаков.”", correct: false },
+        { text: "“Построить scree‑plot строго ради красивой иллюстрации, без дальнейших выводов.”", correct: false }
+      ]
+    },
+    {
+      id: "q3",
+      type: "multi",
+      question: "Студент хочет применить PCA к медицинскому датасету (CVD). Какие формулировки постановки задачи корректны?",
+      help: "",
+      answers: [
+        { text: "“Использовать PCA для выявления нескольких главных компонент, описывающих основные профили риска сердечно‑сосудистых заболеваний, и оценить, сколько компонент достаточно (по EVR и scree‑plot).”", correct: true },
+        { text: "“Применить PCA, чтобы ‘убить шум’ без анализа explained variance и без интерпретации компонент.”", correct: false },
+        { text: "“Построить biplot, чтобы увидеть, как пациенты с разным уровнем риска группируются в пространстве PC1–PC2 и какие показатели (давление, холестерин и т.д.) за это отвечают.”", correct: true },
+        { text: "“Использовать PCA как чёрный ящик, не уточняя, какие выводы по компонентам и группам пациентов нам нужны.”", correct: false }
+      ]
+    },
+    {
+      id: "q4",
+      type: "single",
+      question: "Какой запрос к помощнику по Wine корректнее всего задаёт задачу в духе лекций 3–4?",
+      help: "",
+      answers: [
+        { text: "“Сделай PCA на Wine и пришли любой красивый график.”", correct: false },
+        { text: "“Сделай полный анализ PCA для Wine: EVR, scree‑plot, выбор k, biplot с цветами трёх классов, интерпретацию PC1 и PC2 через химические признаки и краткий вывод для отчёта.”", correct: true },
+        { text: "“Сделай PCA на Wine, но меня интересует только размер матрицы собственных векторов.”", correct: false },
+        { text: "“Сделай PCA на Wine и отбрось все компоненты, кроме последней.”", correct: false }
+      ]
+    },
+    {
+      id: "q5",
+      type: "multi",
+      question: "Какие элементы обязательно стоит включать в постановку задачи, если мы хотим biplot по датасету с классами (например, Iris, Wine)?",
+      help: "",
+      answers: [
+        { text: "Упоминание, что объекты имеют классы/типы, которые нужно визуально различить в пространстве главных компонент.", correct: true },
+        { text: "Требование: построить biplot, показать стрелки‑признаки и точки‑объекты с цветовой маркировкой классов.", correct: true },
+        { text: "Просьба: интерпретировать, какие признаки формируют PC1 и PC2 и какие классы лучше всего разделяются.", correct: true },
+        { text: "Требование: игнорировать любую информацию о классах, чтобы график был проще.", correct: false }
+      ]
+    },
+    {
+      id: "q6",
+      type: "single",
+      question: "Как корректно описать использование EVR и cumulative EVR в постановке задачи?",
+      help: "",
+      answers: [
+        { text: "“Посчитать EVR, игнорируя cumulative EVR, потому что он не нужен.”", correct: false },
+        { text: "“Посчитать EVR и cumulative EVR, чтобы выбрать минимальное число компонент k, обеспечивающее заданный порог объяснённой дисперсии (например, 90% или 95%).”", correct: true },
+        { text: "“Посчитать EVR только для второй и третьей компонент, остальное неинтересно.”", correct: false },
+        { text: "“Посчитать EVR, чтобы найти компоненты с минимальной дисперсией и оставить только их.”", correct: false }
+      ]
+    },
+    {
+      id: "q7",
+      type: "multi",
+      question: "Студент пишет запрос: “Сделай PCA для HT‑датасета и объясни, какие латентные факторы (компоненты) стоят за основными вариациями давления и сопутствующих показателей”. Что желательно добавить, чтобы постановка была полной в стиле лекций 3–4?",
+      help: "",
+      answers: [
+        { text: "Уточнение: “перед PCA стандартизировать признаки (если значения в разных шкалах).”", correct: true },
+        { text: "Просьба: “построить scree‑plot, EVR и cumulative EVR и обосновать выбор числа компонент k.”", correct: true },
+        { text: "Просьба: “построить biplot для PC1–PC2 и описать, как пациенты с разными уровнями давления расположены на этом графике.”", correct: true },
+        { text: "Требование: “не показывать никаких промежуточных расчётов и графиков, только финальные числа k и λ1.”", correct: false }
+      ]
+    },
+    {
+      id: "q8",
+      type: "single",
+      question: "Какая формулировка цели для biplot в датасете Diabetes является наиболее осмысленной?",
+      help: "",
+      answers: [
+        { text: "“Построить biplot, чтобы оценить, как пациенты с диабетом и без диабета распределены в пространстве PC1–PC2, и какие клинические показатели (глюкоза, BMI и т.п.) ответственны за их разделение.”", correct: true },
+        { text: "“Построить biplot, чтобы проверить, какая компонента имеет наибольшую размерность.”", correct: false },
+        { text: "“Построить biplot, чтобы автоматически вылечить пациентов от диабета.”", correct: false },
+        { text: "“Построить biplot, чтобы заменить все диагностические алгоритмы одной картинкой.”", correct: false }
+      ]
+    },
+    {
+      id: "q9",
+      type: "multi",
+      question: "Какие ошибки в постановке задач PCA по лекциям 3–4 стоит избегать?",
+      help: "",
+      answers: [
+        { text: "Отсутствие указания, что именно мы хотим получить от PCA (сжатие, визуализация, факторная интерпретация).", correct: true },
+        { text: "Игнорирование вопроса о том, сколько компонент разумно оставить и почему (нет упоминания EVR, scree‑plot, выбора k).", correct: true },
+        { text: "Требование к PCA: ‘гарантированно полностью отделить классы’, как будто это классификатор.", correct: true },
+        { text: "Уточнение предметной области и смысла признаков перед постановкой задачи.", correct: false }
+      ]
+    },
+    {
+      id: "q10",
+      type: "single",
+      question: "Студент хочет, чтобы помощник не только сделал PCA, но и помог научиться. Какая формулировка запроса наиболее плодотворна?",
+      help: "",
+      answers: [
+        { text: "“Сделай PCA и пришли только финальный график, без объяснений.”", correct: false },
+        { text: "“Сформулируй цель применения PCA к моему датасету, опиши шаги анализа (EVR, scree‑plot, выбор k, biplot), а потом выполни их и прокомментируй каждый шаг так, чтобы я мог повторить это сам.”", correct: true },
+        { text: "“Сделай PCA и пришли 100 строк кода без комментариев.”", correct: false },
+        { text: "“Сделай PCA только ради проверки, что библиотека работает.”", correct: false }
+      ]
+    }
+  ];
+
+  function renderQuiz() {
+    const container = document.getElementById("questions");
+    container.innerHTML = "";
+    quizData.forEach((q, idx) => {
+      const block = document.createElement("div");
+      block.className = "question-block";
+
+      const qText = document.createElement("div");
+      qText.className = "question-text";
+      qText.textContent = (idx + 1) + ". " + q.question;
+      block.appendChild(qText);
+
+      if (q.help) {
+        const help = document.createElement("div");
+        help.className = "small";
+        help.textContent = q.help;
+        block.appendChild(help);
+      }
+
+      q.answers.forEach((ans, aidx) => {
+        const opt = document.createElement("div");
+        opt.className = "option";
+        const input = document.createElement("input");
+        input.type = q.type === "multi" ? "checkbox" : "radio";
+        input.name = q.id;
+        input.value = aidx;
+
+        const label = document.createElement("label");
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(" " + ans.text));
+
+        opt.appendChild(label);
+        block.appendChild(opt);
+      });
+
+      container.appendChild(block);
+    });
+  }
+
+  function getSelectedIndexes(qid) {
+    const inputs = document.querySelectorAll(`input[name="${qid}"]`);
+    const selected = [];
+    inputs.forEach((inp, idx) => {
+      if (inp.checked) selected.push(idx);
+    });
+    return selected;
+  }
+
+  function arraysEqual(a, b) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+
+  function gradeQuiz() {
+    let score = 0;
+    let total = quizData.length;
+    let messages = [];
+
+    quizData.forEach((q, idx) => {
+      const selected = getSelectedIndexes(q.id);
+      const correct = q.answers.map((ans, i) => ans.correct ? i : -1).filter(i => i !== -1);
+
+      const selectedSorted = selected.slice().sort();
+      const correctSorted = correct.slice().sort();
+
+      let ok = false;
+      if (q.type === "single") {
+        ok = (selected.length === 1 && correct.includes(selected[0]));
+      } else {
+        ok = arraysEqual(selectedSorted, correctSorted);
+      }
+
+      if (ok) {
+        score++;
+        messages.push((idx+1) + ") верно");
+      } else {
+        messages.push((idx+1) + ") есть неточности (обсудим на разборе).");
+      }
+    });
+
+    const fb = document.getElementById("feedback");
+    const scoreEl = document.getElementById("score");
+
+    fb.innerHTML = messages.join("<br>");
+    fb.className = score === total ? "correct" : "incorrect";
+
+    scoreEl.textContent = "Итог: " + score + " из " + total;
+  }
+
+  document.getElementById("submit-btn").addEventListener("click", gradeQuiz);
+
+  renderQuiz();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Практики 7 & 8: Факторный анализ (FA), Varimax, KMO, тесты и сравнение с PCA</title>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <!-- Подсветка кода -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fc;
+        }
+        h1, h2, h3 {
+            color: #1e466e;
+            border-bottom: 2px solid #4a7db5;
+            padding-bottom: 0.3em;
+        }
+        h1 { font-size: 2.2em; }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.4em; border-bottom: 1px solid #bdd4f0; }
+        .section {
+            background: white;
+            padding: 25px;
+            margin: 25px 0;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        }
+        .note {
+            background: #e6f2ff;
+            border-left: 6px solid #1e466e;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+        }
+        .formula-box {
+            background: #f0f4fa;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.1em;
+            margin: 20px 0;
+            border: 1px solid #cbdbe0;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        pre {
+            background: #1e1e2e;
+            color: #e0e0e0;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-x: auto;
+        }
+        .quiz-container {
+            background: #fef9e6;
+            border: 1px solid #f0c674;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .quiz-question {
+            margin: 15px 0;
+            padding: 10px;
+            background: #fff7e0;
+            border-radius: 10px;
+        }
+        .quiz-question p {
+            font-weight: bold;
+        }
+        .btn {
+            background: #4a7db5;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-size: 1em;
+        }
+        .btn:hover {
+            background: #2c5a8c;
+        }
+        .result {
+            background: #d4edda;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .spoiler summary {
+            cursor: pointer;
+            color: #1e466e;
+            font-weight: bold;
+        }
+        .spoiler[open] {
+            background: #f4f9ff;
+            padding: 10px;
+            border-radius: 8px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        .fig-placeholder {
+            background: #e9ecef;
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-style: italic;
+        }
+        .two-columns {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .column {
+            flex: 1;
+            min-width: 250px;
+        }
+        .badge {
+            background: #1e466e;
+            color: white;
+            border-radius: 30px;
+            padding: 3px 10px;
+            font-size: 0.8em;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #eef4ff;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📊 Практики 7–8: Факторный анализ (Factor Analysis)</h1>
+<p><strong>Курс:</strong> Анализ главных компонент (продвинутый уровень) | СамТУ, М.В. Долгополов</p>
+<p>Материал содержит полный разбор факторного анализа (FA): математическую модель, вращение Varimax, критерии KMO и тест Бартлетта, сравнение с PCA, примеры на реальных данных, интерактивный тест и задания.</p>
+
+<!-- ========== 1. Введение и теория ========== -->
+<section class="section">
+    <h2>1. Факторный анализ (FA) – основы</h2>
+    <p><strong>Факторный анализ</strong> – метод снижения размерности, который предполагает, что наблюдаемые переменные линейно зависят от <em>латентных (скрытых) факторов</em> плюс специфическая ошибка. В отличие от PCA, который просто ищет направления максимальной дисперсии, FA стремится объяснить корреляции между переменными через общие факторы.</p>
+    <div class="formula-box">
+        \[
+        X = \Lambda F + \varepsilon
+        \]
+        <p>где \(X\) – матрица наблюдаемых переменных, \(\Lambda\) – матрица факторных нагрузок, \(F\) – факторы, \(\varepsilon\) – уникальные ошибки (специфические дисперсии).</p>
+    </div>
+    <p>Ключевые понятия:</p>
+    <ul>
+        <li><span class="badge">Факторная нагрузка (loading)</span> – корреляция между переменной и фактором. Значения >0.5 считаются значимыми.</li>
+        <li><span class="badge">Общность (communality)</span> – доля дисперсии переменной, объясняемая общими факторами: \(h_i^2 = \sum_{j=1}^k \lambda_{ij}^2\).</li>
+        <li><span class="badge">Специфическая дисперсия (uniqueness)</span> – \(1 - h_i^2\).</li>
+    </ul>
+    <p>Для проверки применимости FA используют:</p>
+    <ul>
+        <li><strong>KMO (Kaiser-Meyer-Olkin)</strong> – мера адекватности выборки. Значения >0.6 приемлемы, >0.8 хорошие.</li>
+        <li><strong>Тест Бартлетта (Bartlett’s test of sphericity)</strong> – проверяет, является ли корреляционная матрица единичной (нулевая гипотеза: переменные некоррелированы). p-value < 0.05 означает, что FA имеет смысл.</li>
+    </ul>
+</section>
+
+<!-- ========== 2. Вращение Varimax ========== -->
+<section class="section">
+    <h2>2. Вращение факторов: Varimax</h2>
+    <p>После выделения начальных факторов (обычно методом главных факторов или максимального правдоподобия) факторные нагрузки часто трудно интерпретировать. <strong>Вращение</strong> (rotation) упрощает структуру, максимизируя дисперсию квадратов нагрузок внутри каждого фактора. <strong>Varimax</strong> – ортогональное вращение, которое делает нагрузки либо высокими, либо низкими, облегчая интерпретацию.</p>
+    <div class="note">
+        <strong>Математически Varimax максимизирует:</strong> \( \sum_{j=1}^k \left[ \frac{1}{p} \sum_{i=1}^p (l_{ij}^2)^2 - \left( \frac{1}{p} \sum_{i=1}^p l_{ij}^2 \right)^2 \right] \), где \(l_{ij}\) – факторные нагрузки, \(p\) – число переменных.
+    </div>
+    <p>После вращения факторы остаются некоррелированными (ортогональное вращение). Существуют и косоугольные вращения (Promax), если предполагается корреляция факторов.</p>
+</section>
+
+<!-- ========== 3. Пример: FA на Mall Customers ========== -->
+<section class="section">
+    <h2>3. Факторный анализ на данных Mall Customers</h2>
+    <p>Используем библиотеку <code>factor_analyzer</code> (установка: <code>pip install factor-analyzer</code>). Набор данных содержит возраст, годовой доход, оценку трат (Spending Score). Мы применим FA для выявления скрытых факторов.</p>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from factor_analyzer import FactorAnalyzer
+from factor_analyzer.factor_analyzer import calculate_kmo, calculate_bartlett_sphericity
+
+# Загрузка данных
+df = pd.read_csv('Mall_Customers.csv')
+X = df[['Age', 'Annual Income (k$)', 'Spending Score (1-100)']]
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# KMO и тест Бартлетта
+kmo_all, kmo_model = calculate_kmo(X_scaled)
+chi2, p_value = calculate_bartlett_sphericity(X_scaled)
+print(f'KMO = {kmo_model:.3f}')
+print(f'Bartlett test: chi2={chi2:.2f}, p-value={p_value:.4e}')
+
+# Факторный анализ (метод главных факторов, вращение varimax)
+fa = FactorAnalyzer(n_factors=2, rotation='varimax', method='principal')
+fa.fit(X_scaled)
+
+# Нагрузки
+loadings = fa.loadings_
+print("Факторные нагрузки:\n", loadings)
+print("Общности:\n", fa.get_communalities())
+print("Доля объяснённой дисперсии факторами:", fa.get_factor_variance())</code></pre>
+    <p><strong>Интерпретация:</strong> KMO > 0.6 и p-value < 0.05 подтверждают применимость FA. Факторные нагрузки после Varimax: возможно, фактор 1 объединяет доход и оценку трат, фактор 2 – возраст. Общности показывают, какая часть дисперсии каждой переменной объяснена двумя факторами.</p>
+    <div class="fig-placeholder">📊 Результат на Mall Customers (пример): <br> KMO = 0.71, Bartlett p < 0.001; после вращения Varimax нагрузки: доход 0.85, оценка 0.78 на факторе 1; возраст 0.92 на факторе 2.</div>
+</section>
+
+<!-- ========== 4. Сравнение FA и PCA на Iris ========== -->
+<section class="section">
+    <h2>4. Сравнение FA и PCA на наборе Iris</h2>
+    <p>На данных Iris (4 признака: длина и ширина чашелистика и лепестка) проведём PCA и FA (с вращением Varimax) и сравним нагрузки/компоненты.</p>
+    <pre><code class="language-python">from sklearn.datasets import load_iris
+from sklearn.decomposition import PCA
+from factor_analyzer import FactorAnalyzer
+import matplotlib.pyplot as plt
+
+iris = load_iris()
+X = iris.data
+scaler = StandardScaler()
+X_std = scaler.fit_transform(X)
+
+# PCA
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_std)
+print("PCA loadings (компоненты x признаки):\n", pca.components_.T)
+
+# FA (2 фактора, varimax)
+fa = FactorAnalyzer(n_factors=2, rotation='varimax', method='principal')
+fa.fit(X_std)
+print("FA loadings после Varimax:\n", fa.loadings_)
+
+# Визуализация (скетч кода)
+plt.figure(figsize=(12,5))
+plt.subplot(1,2,1)
+plt.scatter(X_pca[:,0], X_pca[:,1], c=iris.target, cmap='viridis')
+plt.title('PCA: первые две компоненты')
+plt.xlabel('PC1'); plt.ylabel('PC2')
+plt.subplot(1,2,2)
+X_fa = fa.transform(X_std)
+plt.scatter(X_fa[:,0], X_fa[:,1], c=iris.target, cmap='viridis')
+plt.title('FA: факторные координаты')
+plt.xlabel('Factor 1'); plt.ylabel('Factor 2')
+plt.show()</code></pre>
+    <div class="fig-placeholder">📊 На Iris PCA и FA дают разное геометрическое представление: PCA ориентирует оси по максимуму дисперсии, FA – по общим факторам. Нагрузки после Varimax часто делают факторы более интерпретируемыми (например, фактор 1 – размеры лепестков, фактор 2 – размеры чашелистиков).</div>
+    <div class="note">Главное отличие: PCA – это преобразование данных, FA – модель, объясняющая ковариацию. В FA мы предполагаем наличие латентных факторов, PCA просто ищет направления.</div>
+</section>
+
+<!-- ========== 5. Интерактивный тест по факторному анализу ========== -->
+<section class="section">
+    <h2>5. Онлайн-тест: проверьте свои знания</h2>
+    <div class="quiz-container" id="quiz">
+        <div class="quiz-question">
+            <p>1. Какое значение KMO считается приемлемым для проведения факторного анализа?</p>
+            <label><input type="radio" name="q1" value="a"> &lt; 0.5</label><br>
+            <label><input type="radio" name="q1" value="b"> &gt; 0.6</label><br>
+            <label><input type="radio" name="q1" value="c"> &gt; 0.9</label><br>
+            <label><input type="radio" name="q1" value="d"> = 0.0</label>
+        </div>
+        <div class="quiz-question">
+            <p>2. Что проверяет тест Бартлетта (Bartlett's test of sphericity)?</p>
+            <label><input type="radio" name="q2" value="a"> Нормальность данных</label><br>
+            <label><input type="radio" name="q2" value="b"> Равенство корреляционной матрицы единичной</label><br>
+            <label><input type="radio" name="q2" value="c"> Гомоскедастичность остатков</label><br>
+            <label><input type="radio" name="q2" value="d"> Автокорреляцию</label>
+        </div>
+        <div class="quiz-question">
+            <p>3. Какой метод вращения является ортогональным и стремится к упрощению структуры нагрузок?</p>
+            <label><input type="radio" name="q3" value="a"> Promax</label><br>
+            <label><input type="radio" name="q3" value="b"> Varimax</label><br>
+            <label><input type="radio" name="q3" value="c"> Oblimin</label><br>
+            <label><input type="radio" name="q3" value="d"> Quartimax</label>
+        </div>
+        <div class="quiz-question">
+            <p>4. В факторном анализе "общность" (communality) переменной – это:</p>
+            <label><input type="radio" name="q4" value="a"> Сумма квадратов факторных нагрузок</label><br>
+            <label><input type="radio" name="q4" value="b"> Дисперсия специфической ошибки</label><br>
+            <label><input type="radio" name="q4" value="c"> Собственное значение фактора</label><br>
+            <label><input type="radio" name="q4" value="d"> Коэффициент корреляции с другими переменными</label>
+        </div>
+        <div class="quiz-question">
+            <p>5. Какая факторная нагрузка считается значимой для интерпретации (по общепринятому правилу)?</p>
+            <label><input type="radio" name="q5" value="a"> &gt; 0.3</label><br>
+            <label><input type="radio" name="q5" value="b"> &gt; 0.5</label><br>
+            <label><input type="radio" name="q5" value="c"> &gt; 0.7</label><br>
+            <label><input type="radio" name="q5" value="d"> &gt; 0.1</label>
+        </div>
+        <div class="quiz-question">
+            <p>6. Чем принципиально отличается факторный анализ от PCA?</p>
+            <label><input type="radio" name="q6" value="a"> FA предполагает наличие скрытых факторов и ошибок</label><br>
+            <label><input type="radio" name="q6" value="b"> PCA не требует стандартизации</label><br>
+            <label><input type="radio" name="q6" value="c"> FA всегда даёт меньше компонент</label><br>
+            <label><input type="radio" name="q6" value="d"> FA не может быть использован для визуализации</label>
+        </div>
+        <button class="btn" id="submitQuiz">Проверить ответы</button>
+        <div id="quizResult" class="result" style="display:none;"></div>
+    </div>
+    <script>
+        document.getElementById('submitQuiz').addEventListener('click', function() {
+            const answers = {
+                q1: 'b',
+                q2: 'b',
+                q3: 'b',
+                q4: 'a',
+                q5: 'b',
+                q6: 'a'
+            };
+            let score = 0;
+            for (let i = 1; i <= 6; i++) {
+                const selected = document.querySelector(`input[name="q${i}"]:checked`);
+                if (selected && selected.value === answers[`q${i}`]) {
+                    score++;
+                }
+            }
+            const resultDiv = document.getElementById('quizResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = `<strong>Ваш результат: ${score} из 6</strong><br>`;
+            if (score === 6) resultDiv.innerHTML += 'Отлично! Вы отлично разбираетесь в факторном анализе.';
+            else if (score >= 4) resultDiv.innerHTML += 'Хорошо, но стоит повторить некоторые моменты.';
+            else resultDiv.innerHTML += 'Рекомендуем пересмотреть теорию и примеры.';
+        });
+    </script>
+</section>
+
+<!-- ========== 6. Задания для самостоятельной работы по Varimax ========== -->
+<section class="section">
+    <h2>6. Задания для самостоятельной практики (Varimax вращение)</h2>
+    <details class="spoiler">
+        <summary>📘 Задание 1: Вращение вручную</summary>
+        <p>Возьмите простую матрицу нагрузок 2×2:  
+        \[
+        \Lambda = \begin{bmatrix} 0.8 & 0.3 \\ 0.4 & 0.7 \end{bmatrix}
+        \]
+        Примените ортогональное вращение Varimax (аналитически или используя формулу для двух факторов) и получите повернутую матрицу. Объясните, как изменилась интерпретация.</p>
+        <p><strong>Подсказка:</strong> Для двух факторов вращение – это поворот на угол θ. Varimax максимизирует сумму дисперсий квадратов нагрузок.</p>
+        <details>
+            <summary>✅ Пример решения</summary>
+            <pre><code class="language-python">import numpy as np
+from scipy.optimize import minimize
+L = np.array([[0.8, 0.3], [0.4, 0.7]])
+def varimax_2d(L, max_iter=100):
+    # ортогональное вращение для двух факторов
+    def criterion(theta):
+        c, s = np.cos(theta), np.sin(theta)
+        T = np.array([[c, -s], [s, c]])
+        Lrot = L @ T
+        # критерий Varimax: максимизация суммы дисперсий квадратов нагрузок
+        v = np.sum((Lrot**2)**2) - np.sum(Lrot**2)**2 / Lrot.shape[0]
+        return -v
+    res = minimize(criterion, 0)
+    theta = res.x[0]
+    c, s = np.cos(theta), np.sin(theta)
+    T = np.array([[c, -s], [s, c]])
+    return L @ T
+print(varimax_2d(L))</code></pre>
+            <p>Результат: после вращения нагрузки становятся более "поляризованными" (например, первый фактор сильнее связан с первой переменной, второй – со второй).</p>
+        </details>
+    </details>
+    <details class="spoiler">
+        <summary>📘 Задание 2: Сравнение вращений на реальных данных</summary>
+        <p>На датасете <code>wine</code> (sklearn) выполните факторный анализ с 3 факторами. Сравните нагрузки без вращения, с Varimax и с Promax (косоугольное). Какое вращение даёт более интерпретируемую структуру?</p>
+        <p><strong>Подсказка:</strong> Используйте <code>FactorAnalyzer(rotation='varimax')</code> и <code>rotation='promax'</code>. Оцените, какие признаки загружаются на какие факторы.</p>
+    </details>
+    <details class="spoiler">
+        <summary>📘 Задание 3: Влияние числа факторов на интерпретацию</summary>
+        <p>На данных Mall Customers проведите FA с 2 и 3 факторами (после Varimax). Сравните общности и нагрузки. Какой вариант более содержателен с точки зрения маркетинговой сегментации?</p>
+    </details>
+</section>
+
+<!-- ========== 7. Дополнительные материалы и ссылки ========== -->
+<section class="section">
+    <h2>7. Полезные ресурсы и литература</h2>
+    <ul>
+        <li><a href="https://scikit-learn.org/stable/modules/decomposition.html#pca" target="_blank">PCA в scikit-learn</a></li>
+        <li><a href="https://factor-analyzer.readthedocs.io/" target="_blank">Документация factor_analyzer</a></li>
+        <li><a href="https://www.ibm.com/docs/en/spss-statistics/29.0.0?topic=analysis-factor" target="_blank">IBM SPSS: факторный анализ (теория)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Factor_analysis" target="_blank">Factor analysis – Wikipedia (англ.)</a></li>
+        <li><a href="https://www.youtube.com/watch?v=ZPujzfLID2Q" target="_blank">Видео: Вращение Varimax простыми словами</a></li>
+    </ul>
+</section>
+
+<!-- ========== 8. Заключение ========== -->
+<section class="section">
+    <h2>8. Резюме</h2>
+    <p>На практиках 7–8 мы изучили:</p>
+    <ul>
+        <li>Математическую модель факторного анализа и её отличие от PCA.</li>
+        <li>Критерии применимости: KMO и тест Бартлетта.</li>
+        <li>Интерпретацию факторных нагрузок и общностей.</li>
+        <li>Ортогональное вращение Varimax для упрощения структуры.</li>
+        <li>Реализацию на Python с примерами Mall Customers и Iris.</li>
+        <li>Проверили знания через интерактивный тест.</li>
+        <li>Получили задания для углублённой практики.</li>
+    </ul>
+    <p>Эти методы широко применяются в психометрии, маркетинге, биоинформатике для выявления скрытых факторов.</p>
+</section>
+
+<footer>
+    <p>© СамТУ, кафедра анализа данных, М.В. Долгополов | 2025 | Материалы практик 7–8 по факторному анализу</p>
+</footer>
+</body>
+</html>

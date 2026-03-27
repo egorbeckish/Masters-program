@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Практики 5 & 6: PCA + K-means, Whitening, t-SNE</title>
+    <!-- MathJax для формул -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <!-- Подсветка кода -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #fafafa;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+            margin-top: 1.5em;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.3em;
+        }
+        h1 { font-size: 2.2em; }
+        h2 { font-size: 1.8em; }
+        h3 { font-size: 1.4em; border-bottom: 1px solid #bdc3c7; }
+        .section {
+            background: white;
+            padding: 25px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .note {
+            background-color: #e8f4fd;
+            border-left: 6px solid #3498db;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border-left: 6px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        pre {
+            background: #f8f8f8;
+            padding: 15px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        .formula-box {
+            background: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            text-align: center;
+            margin: 15px 0;
+        }
+        .figure {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px dashed #3498db;
+            text-align: center;
+            font-style: italic;
+            margin: 20px 0;
+        }
+        .spoiler summary {
+            cursor: pointer;
+            color: #3498db;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .spoiler[open] {
+            background: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .btn {
+            display: inline-block;
+            background: #3498db;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            margin: 5px 0;
+        }
+        .btn:hover {
+            background: #2980b9;
+        }
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+
+        /* ===== Интерактивное оглавление ===== */
+        .toc-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #3498db;
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            z-index: 1000;
+            border: none;
+            transition: background 0.3s;
+        }
+        .toc-toggle:hover {
+            background: #2980b9;
+        }
+        .toc-panel {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            width: 280px;
+            max-height: 70vh;
+            overflow-y: auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            padding: 20px;
+            z-index: 999;
+            display: none;
+            font-size: 0.9em;
+            border-left: 5px solid #3498db;
+        }
+        .toc-panel.show {
+            display: block;
+        }
+        .toc-panel h3 {
+            margin-top: 0;
+            color: #2c3e50;
+            border-bottom: 1px solid #3498db;
+            padding-bottom: 8px;
+        }
+        .toc-panel ul {
+            list-style-type: none;
+            padding-left: 0;
+            margin: 10px 0 0;
+        }
+        .toc-panel li {
+            margin: 8px 0;
+        }
+        .toc-panel a {
+            text-decoration: none;
+            color: #2980b9;
+            display: block;
+            padding: 5px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .toc-panel a:hover {
+            background: #ecf0f1;
+            text-decoration: none;
+        }
+        .toc-panel .toc-h2 {
+            font-weight: bold;
+            margin-top: 10px;
+            color: #2c3e50;
+        }
+        .toc-panel .toc-h3 {
+            padding-left: 15px;
+            font-size: 0.95em;
+        }
+        /* Кнопка закрытия (маленькая) */
+        .toc-close {
+            float: right;
+            cursor: pointer;
+            font-size: 20px;
+            color: #7f8c8d;
+            margin-top: -5px;
+        }
+        .toc-close:hover {
+            color: #e74c3c;
+        }
+        /* Затемнение фона (опционально) */
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.1);
+            z-index: 998;
+        }
+        .overlay.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Кнопка-триггер и панель оглавления -->
+<div class="toc-toggle" id="tocToggle">📚</div>
+<div class="overlay" id="overlay"></div>
+<div class="toc-panel" id="tocPanel">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin:0;">📋 Содержание</h3>
+        <span class="toc-close" id="tocClose">&times;</span>
+    </div>
+    <ul>
+        <li class="toc-h2"><a href="#intro">Введение и предварительные знания</a></li>
+        <li class="toc-h2"><a href="#prac5">Практика 5: PCA + K‑means</a></li>
+        <li class="toc-h3"><a href="#p5-dataset">5.1 Датасет и EDA</a></li>
+        <li class="toc-h3"><a href="#p5-pca">5.2 PCA и выбор компонент</a></li>
+        <li class="toc-h3"><a href="#p5-kmeans-orig">5.3 K‑means на исходных</a></li>
+        <li class="toc-h3"><a href="#p5-kmeans-pc">5.4 K‑means на главных компонентах</a></li>
+        <li class="toc-h3"><a href="#p5-biplot">5.5 Biplot кластеров</a></li>
+        <li class="toc-h2"><a href="#prac6">Практика 6: Whitening + t‑SNE</a></li>
+        <li class="toc-h3"><a href="#p6-whitening">6.1 PCA Whitening</a></li>
+        <li class="toc-h3"><a href="#p6-tsne">6.2 t‑SNE vs PCA</a></li>
+        <li class="toc-h3"><a href="#p6-viz">6.3 Визуализация кластеров</a></li>
+        <li class="toc-h2"><a href="#tasks">Задания для самостоятельной работы</a></li>
+        <li class="toc-h2"><a href="#ref">Ссылки и литература</a></li>
+    </ul>
+</div>
+
+<script>
+    (function() {
+        const toggle = document.getElementById('tocToggle');
+        const panel = document.getElementById('tocPanel');
+        const closeBtn = document.getElementById('tocClose');
+        const overlay = document.getElementById('overlay');
+
+        function showPanel(show) {
+            if (show) {
+                panel.classList.add('show');
+                overlay.classList.add('show');
+            } else {
+                panel.classList.remove('show');
+                overlay.classList.remove('show');
+            }
+        }
+
+        toggle.addEventListener('click', () => {
+            const isShown = panel.classList.contains('show');
+            showPanel(!isShown);
+        });
+
+        closeBtn.addEventListener('click', () => {
+            showPanel(false);
+        });
+
+        overlay.addEventListener('click', () => {
+            showPanel(false);
+        });
+
+        // Закрытие по Esc
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                showPanel(false);
+            }
+        });
+    })();
+</script>
+
+<!-- =============== Введение =============== -->
+<section id="intro" class="section">
+    <h1>🧪 Практики 5 и 6: PCA + K‑means, Whitening, t‑SNE</h1>
+    <p><strong>Курс:</strong> Анализ главных компонент (СамТУ, М.В. Долгополов)</p>
+    <p>Материал построен по принципу <strong>от простого к сложному</strong>. Вы повторите ключевые понятия, разберёте примеры и выполните самостоятельные задания с ответами.</p>
+
+    <h3>📌 Что необходимо знать перед началом?</h3>
+    <ul>
+        <li><strong>PCA</strong> — линейное преобразование для уменьшения размерности. Главные компоненты — собственные векторы ковариационной матрицы. Доля объяснённой дисперсии (EVR) = \( \lambda_i / \sum \lambda_j \). <br> Формула проекции: \( Z = X_{\text{std}} W \), где \( W \) — матрица собственных векторов.</li>
+        <li><strong>Стандартизация</strong> — обязательный шаг перед PCA (признаки приводятся к нулевому среднему и единичной дисперсии).</li>
+        <li><strong>K‑means</strong> — алгоритм кластеризации, минимизирующий инерцию (сумму квадратов расстояний до центроидов).</li>
+        <li><strong>Метод локтя (Elbow method)</strong> — выбор k по изгибу графика инерции.</li>
+        <li><strong>Силуэт (Silhouette)</strong> — метрика качества кластеризации (от -1 до 1).</li>
+        <li><strong>Biplot</strong> — совмещённое отображение объектов (точки) и нагрузок исходных признаков (стрелки).</li>
+    </ul>
+    <p>🔗 <a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" target="_blank">Документация PCA (sklearn)</a> | 
+    <a href="https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html" target="_blank">KMeans</a> | 
+    <a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.StandardScaler.html" target="_blank">StandardScaler</a></p>
+</section>
+
+<!-- =============== ПРАКТИКА 5 =============== -->
+<section id="prac5" class="section">
+    <h2>🔬 Практика 5: PCA как предобработка для кластеризации</h2>
+    <p><strong>Датасет:</strong> Mall Customers (<code>Age</code>, <code>Annual Income (k$)</code>, <code>Spending Score (1-100)</code>). <br>
+    <strong>Цель:</strong> Сравнить кластеризацию K‑means на исходных признаках и на главных компонентах. Оценить влияние PCA.</p>
+
+    <h3 id="p5-dataset">5.1 EDA и стандартизация</h3>
+    <p>Загружаем данные (например, из <code>Mall_Customers.csv</code>). Первичный анализ: распределения, парные графики. Все признаки имеют разные масштабы, поэтому применяем <code>StandardScaler</code>.</p>
+    <pre><code class="language-python">import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+df = pd.read_csv('Mall_Customers.csv')  # предположим, столбцы: Age, Income, Spending
+X = df[['Age', 'Annual Income (k$)', 'Spending Score (1-100)']]
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)</code></pre>
+
+    <h3 id="p5-pca">5.2 PCA: объяснённая дисперсия и выбор числа компонент</h3>
+    <p>Обучаем PCA на стандартизированных данных, смотрим долю объяснённой дисперсии каждой компоненты (EVR) и накопленную дисперсию.</p>
+    <pre><code class="language-python">pca = PCA()
+X_pca = pca.fit_transform(X_scaled)
+evr = pca.explained_variance_ratio_
+cumsum = np.cumsum(evr)
+print('EVR:', evr)
+print('Накопленная дисперсия:', cumsum)
+
+plt.figure(figsize=(8,4))
+plt.subplot(1,2,1)
+plt.bar(range(1,4), evr, tick_label=['PC1','PC2','PC3'])
+plt.ylabel('Доля дисперсии')
+plt.subplot(1,2,2)
+plt.plot(range(1,4), cumsum, 'o-')
+plt.xlabel('Число компонент')
+plt.ylabel('Накопленная дисперсия')
+plt.show()</code></pre>
+    <div class="figure">📊 Рисунок 1: Графики EVR и накопленной дисперсии. Обычно первые две компоненты объясняют ~60-70% дисперсии.</div>
+    <p>Вывод: для визуализации возьмём 2 компоненты. Для кластеризации можно оставить 2 или 3 (зависит от задачи).</p>
+
+    <h3 id="p5-kmeans-orig">5.3 K‑means на исходных признаках</h3>
+    <p>Перебираем k от 2 до 10, вычисляем инерцию и силуэт.</p>
+    <pre><code class="language-python">inertia = []
+silhouette = []
+K_range = range(2, 11)
+for k in K_range:
+    km = KMeans(n_clusters=k, random_state=42)
+    labels = km.fit_predict(X_scaled)
+    inertia.append(km.inertia_)
+    silhouette.append(silhouette_score(X_scaled, labels))
+
+plt.figure(figsize=(12,4))
+plt.subplot(1,2,1)
+plt.plot(K_range, inertia, 'bo-')
+plt.xlabel('k'); plt.ylabel('Инерция'); plt.title('Метод локтя')
+plt.subplot(1,2,2)
+plt.plot(K_range, silhouette, 'ro-')
+plt.xlabel('k'); plt.ylabel('Силуэт'); plt.title('Silhouette score')
+plt.show()</code></pre>
+    <div class="figure">📊 Рисунок 2: Локоть наблюдается при k=5, силуэт максимален при k=5 (около 0.45). Выбираем k=5.</div>
+    <p>Получаем кластеры на исходных данных. Запомним метки <code>labels_orig</code>.</p>
+
+    <h3 id="p5-kmeans-pc">5.4 K‑means на главных компонентах</h3>
+    <p>Повторим кластеризацию, но теперь на первых двух главных компонентах (можно и на трёх). Сравним метрики.</p>
+    <pre><code class="language-python">X_pca2 = X_pca[:, :2]  # две компоненты
+inertia_pca = []
+silhouette_pca = []
+for k in K_range:
+    km = KMeans(n_clusters=k, random_state=42)
+    labels = km.fit_predict(X_pca2)
+    inertia_pca.append(km.inertia_)
+    silhouette_pca.append(silhouette_score(X_pca2, labels))
+
+# Сравнение силуэта
+plt.plot(K_range, silhouette, label='Исходные признаки')
+plt.plot(K_range, silhouette_pca, label='2 главные компоненты')
+plt.xlabel('k'); plt.ylabel('Silhouette'); plt.legend(); plt.show()</code></pre>
+    <div class="figure">📊 Рисунок 3: Сравнение силуэта. Обычно значения близки, но на PC может быть немного ниже из‑за потери информации. Однако шум может уменьшиться, и кластеры станут более интерпретируемыми.</div>
+    <p><strong>Вывод:</strong> PCA может служить хорошей предобработкой для кластеризации, особенно если признаки коррелированы. Это уменьшает размерность и шум.</p>
+
+    <h3 id="p5-biplot">5.5 Biplot кластеров</h3>
+    <p>Строим scatter первых двух главных компонент, окрашивая точки по кластерам (например, полученным на исходных данных). Добавляем стрелки — нагрузки исходных признаков.</p>
+    <pre><code class="language-python"># Получаем нагрузки (компоненты)
+loadings = pca.components_.T * np.sqrt(pca.explained_variance_)  # для масштаба как в биплоте
+# или просто pca.components_.T
+
+plt.figure(figsize=(10,8))
+scatter = plt.scatter(X_pca[:,0], X_pca[:,1], c=labels_orig, cmap='viridis', alpha=0.6)
+for i, feature in enumerate(['Age','Income','Spending']):
+    plt.arrow(0, 0, loadings[i,0], loadings[i,1], color='red', alpha=0.8, head_width=0.1)
+    plt.text(loadings[i,0]*1.2, loadings[i,1]*1.2, feature, color='red', fontsize=12)
+plt.xlabel('PC1')
+plt.ylabel('PC2')
+plt.colorbar(scatter, label='Кластер')
+plt.title('Biplot кластеров (K‑means на исходных данных)')
+plt.grid(True, alpha=0.3)
+plt.show()</code></pre>
+    <div class="figure">📊 Рисунок 4: Biplot показывает, что PC1 в основном определяется доходом и тратами (противоположно возрасту?), а PC2 — возрастом. Кластеры хорошо разделяются.</div>
+</section>
+
+<!-- =============== ПРАКТИКА 6 =============== -->
+<section id="prac6" class="section">
+    <h2>⚡ Практика 6: Whitening и t‑SNE</h2>
+
+    <h3 id="p6-whitening">6.1 PCA Whitening (отбеливание)</h3>
+    <p><strong>Определение:</strong> Преобразование, после которого ковариационная матрица данных становится единичной (\( \text{cov}(Z_{\text{whitened}}) = I \)). Это делает данные "сферическими" — все направления равнозначны. Полезно для алгоритмов, чувствительных к масштабу (нейронные сети, SVM).</p>
+    <div class="formula-box">
+        \[ Z_{\text{whitened}} = Z \cdot \Lambda^{-1/2} \]
+    </div>
+    <p>где \( Z \) — матрица проекций на главные компоненты (после PCA), а \( \Lambda = \text{diag}(\lambda_1, \dots, \lambda_k) \) — собственные значения (дисперсии вдоль компонент). Произведение делается поэлементно: каждый столбец \( Z \) делится на корень из соответствующего собственного значения.</p>
+    <p>В коде (после PCA):</p>
+    <pre><code class="language-python"># X_pca — проекции на все компоненты (k=3)
+lambdas = pca.explained_variance_  # собственные значения
+X_whitened = X_pca / np.sqrt(lambdas)  # broadcasting по столбцам
+# Ковариация X_whitened должна быть близка к единичной
+print(np.cov(X_whitened, rowvar=False).round(3))</code></pre>
+    <p>🔗 <a href="https://en.wikipedia.org/wiki/Whitening_transformation" target="_blank">Whitening transformation (Wiki)</a></p>
+    <div class="note">
+        <strong>Примечание:</strong> Существует также ZCA‑whitening, который возвращает данные в исходное пространство признаков, но с единичной ковариацией. PCA whitening (просто масштабирование компонент) — самый простой вариант.
+    </div>
+
+    <h3 id="p6-tsne">6.2 t‑SNE vs PCA</h3>
+    <table>
+        <tr><th>PCA</th><th>t‑SNE</th></tr>
+        <tr><td>Линейное преобразование</td><td>Нелинейное (основано на вероятностях)</td></tr>
+        <tr><td>Быстрое (O(n·d²))</td><td>Медленное (O(n²))</td></tr>
+        <tr><td>Сохраняет глобальную структуру (максимум дисперсии)</td><td>Сохраняет локальную структуру (близость соседей)</td></tr>
+        <tr><td>Детерминированный результат</td><td>Стохастический (разный при разных запусках)</td></tr>
+        <tr><td>Можно использовать как этап модели (признаки)</td><td>Только для визуализации (не для построения моделей)</td></tr>
+    </table>
+    <p>Основная идея t‑SNE: преобразует расстояния в вероятности и минимизирует расхождение Кульбака‑Лейблера между распределениями в исходном и низкоразмерном пространствах.</p>
+
+    <h3 id="p6-viz">6.3 Визуализация кластеров на Mall Customers</h3>
+    <p>Применим t‑SNE к стандартизированным данным и сравним с PCA (2 компоненты). Раскрасим точки по кластерам, полученным в практикуме 5 (например, k=5).</p>
+    <pre><code class="language-python">from sklearn.manifold import TSNE
+
+tsne = TSNE(n_components=2, random_state=42, perplexity=30)
+X_tsne = tsne.fit_transform(X_scaled)
+
+plt.figure(figsize=(12,5))
+plt.subplot(1,2,1)
+plt.scatter(X_pca[:,0], X_pca[:,1], c=labels_orig, cmap='tab10', alpha=0.6)
+plt.title('PCA (2 компоненты)')
+plt.subplot(1,2,2)
+plt.scatter(X_tsne[:,0], X_tsne[:,1], c=labels_orig, cmap='tab10', alpha=0.6)
+plt.title('t‑SNE (perplexity=30)')
+plt.show()</code></pre>
+    <div class="figure">📊 Рисунок 5: Сравнение PCA и t‑SNE. PCA даёт глобальное разделение по осям (доход/возраст), t‑SNE часто показывает более чёткие локальные кластеры, иногда даже подкластеры.</div>
+    <p><strong>Выводы:</strong> t‑SNE лучше подходит для визуализации сложных нелинейных структур, но результат зависит от настройки параметров (perplexity). PCA даёт быструю и интерпретируемую линейную проекцию.</p>
+    <div class="warning">
+        ⚠️ t‑SNE не следует использовать для уменьшения размерности перед кластеризацией — он оптимизирован для визуализации и искажает глобальные расстояния.
+    </div>
+</section>
+
+<!-- =============== ЗАДАНИЯ =============== -->
+<section id="tasks" class="section">
+    <h2>✍️ Задания для самостоятельной работы</h2>
+    <p>Попробуйте выполнить задания, используя те же или новые данные. Ответы и подсказки скрыты под спойлерами.</p>
+
+    <h3>Задание 1: Whitening + K‑means</h3>
+    <p>На датасете Mall Customers примените PCA‑whitening (к первым двум компонентам) и выполните K‑means (k=5). Сравните силуэт с кластеризацией на обычных PC. Улучшилось ли качество? Почему?</p>
+    <details class="spoiler">
+        <summary>🔍 Подсказка</summary>
+        После whitening все компоненты имеют одинаковую дисперсию (1). K‑means опирается на евклидовы расстояния, поэтому равный масштаб может быть полезен. Попробуйте и сравните.
+    </details>
+    <details class="spoiler">
+        <summary>✅ Ответ (пример)</summary>
+        Код:
+        <pre><code class="language-python">X_pca2 = X_pca[:, :2]
+lambdas2 = pca.explained_variance_[:2]
+X_white2 = X_pca2 / np.sqrt(lambdas2)
+km_white = KMeans(n_clusters=5, random_state=42).fit(X_white2)
+sil_white = silhouette_score(X_white2, km_white.labels_)
+print('Силуэт на whitened PC:', sil_white)
+# Обычно значение близко к кластеризации на PC, но может немного измениться из‑за перемасштабирования.</code></pre>
+        <p>Whitening не всегда улучшает кластеризацию, но может помочь, если данные сильно анизотропны. В нашем случае разница незначительна.</p>
+    </details>
+
+    <h3>Задание 2: Другой датасет — Wine</h3>
+    <p>Загрузите датасет Wine (из sklearn.datasets). Проведите аналогичный анализ: стандартизация, PCA (выбор числа компонент), K‑means на исходных и на PC (первые 2), сравните силуэт. Постройте biplot и t‑SNE визуализацию. Сколько кластеров соответствует реальным сортам вин (3)?</p>
+    <details class="spoiler">
+        <summary>🔍 Подсказка</summary>
+        Используйте <code>load_wine()</code>. Признаки уже непрерывные, но разномасштабные. Реальные метки (<code>target</code>) можно использовать для внешней оценки, но в задаче кластеризации мы их не видим. Попробуйте k=3.
+    </details>
+    <details class="spoiler">
+        <summary>✅ Ответ (пример)</summary>
+        <pre><code class="language-python">from sklearn.datasets import load_wine
+data = load_wine()
+X = data.data
+y = data.target  # для проверки
+# ... стандартизация, PCA, K-means ...
+# Силуэт для k=3 обычно ~0.3 на исходных, на PC ~0.28 (небольшая потеря).
+# t‑SNE часто разделяет сорта очень чётко.</code></pre>
+    </details>
+
+    <h3>Задание 3: Эксперименты с perplexity в t‑SNE</h3>
+    <p>На Mall Customers постройте t‑SNE с разными значениями perplexity (5, 30, 50, 100). Как меняется визуальная картина? Сравните с PCA.</p>
+    <details class="spoiler">
+        <summary>🔍 Подсказка</summary>
+        Perplexity можно интерпретировать как эффективное число соседей. Слишком малое значение приводит к "шумному" разбросу, слишком большое — к вырождению в однородное облако.
+    </details>
+    <details class="spoiler">
+        <summary>✅ Ответ (пример)</summary>
+        <pre><code class="language-python">for perp in [5,30,50,100]:
+    tsne = TSNE(n_components=2, perplexity=perp, random_state=42)
+    Xt = tsne.fit_transform(X_scaled)
+    plt.scatter(Xt[:,0], Xt[:,1], c=labels_orig, cmap='tab10', alpha=0.6)
+    plt.title(f'perplexity={perp}')
+    plt.show()</code></pre>
+        <p>При малом perplexity кластеры дробятся, при большом — сливаются. Perplexity=30 даёт обычно разумный компромисс.</p>
+    </details>
+</section>
+
+<!-- =============== ССЫЛКИ =============== -->
+<section id="ref" class="section">
+    <h2>📎 Полезные ссылки и литература</h2>
+    <ul>
+        <li><a href="https://scikit-learn.org/stable/auto_examples/cluster/plot_kmeans_silhouette_analysis.html" target="_blank">Пример анализа силуэта (sklearn)</a></li>
+        <li><a href="https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html" target="_blank">PCA — Python Data Science Handbook</a></li>
+        <li><a href="https://distill.pub/2016/misread-tsne/" target="_blank">Как правильно интерпретировать t‑SNE (Distill)</a></li>
+        <li><a href="https://en.wikipedia.org/wiki/Whitening_transformation" target="_blank">Whitening transformation (Wiki)</a></li>
+        <li><a href="https://www.kaggle.com/datasets/vjchoudhary7/customer-segmentation-tutorial-in-python" target="_blank">Датасет Mall Customers на Kaggle</a></li>
+    </ul>
+</section>
+
+<footer>
+    <p>Материал подготовлен для курса "Анализ главных компонент" | СамТУ, М.В. Долгополов | 2025</p>
+    <p>Лицензия: свободное использование с указанием авторства</p>
+</footer>
+
+<!-- Кнопка наверх (простая) -->
+<a href="#" style="position: fixed; bottom: 20px; right: 20px; background: #3498db; color: white; padding: 10px 15px; border-radius: 50%; text-decoration: none; font-size: 20px;">⬆️</a>
+
+</body>
+</html>
