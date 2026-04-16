@@ -64,11 +64,13 @@ class KaczmarzMethod:
 	def solve(self) -> None:
 		norms = np.sum(A ** 2, axis=1)
 		probs = norms / sum(norms)
+		param = 0
 		
 		for iter in range(self.max_iter):
 			prev = self.x0.copy()
 
 			if iter % self.n == 0:
+				param += 1
 				if np.linalg.norm(self.A @ self.x0 - self.b) < self.eps:
 					break
 
@@ -82,7 +84,8 @@ class KaczmarzMethod:
 			f"Lambda: {self.lambda_}",
 			f"Кол-во итераций: {iter + 1}",
 			f"Ошибка: {np.linalg.norm(self.x0 - prev)}",
-			f"Норма вектора невязки: {np.linalg.norm(self.A @ self.x0 - self.b)}\n",
+			f"Норма вектора невязки: {np.linalg.norm(self.A @ self.x0 - self.b)}",
+			f"Параметр регулеризации: {param}\n",
 			sep="\n",
 			file=open(f"{os.path.dirname(__file__)}/results.txt", "a", encoding="utf-8")
 		)
@@ -93,7 +96,7 @@ class KaczmarzMethod:
 if __name__ == "__main__":
 	np.random.seed(42)
 
-	n, m = 5000, 5000
+	n, m = 100, 100
 	A = np.random.randn(n, m)
 	x = np.random.randn(m)
 	b = A @ x
@@ -102,7 +105,7 @@ if __name__ == "__main__":
 		obj = KaczmarzMethod(
 			A,
 			b,
-			max_iter=10 ** 7,
+			max_iter=10 ** 6,
 			eps=1e-8,
 			method=method
 		)

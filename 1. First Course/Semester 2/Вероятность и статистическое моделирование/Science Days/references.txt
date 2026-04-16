@@ -1,0 +1,3 @@
+https://en.wikipedia.org/wiki/Algebraic_reconstruction_technique
+https://en.wikipedia.org/wiki/Radon_transform
+https://github.com/hanyoseob/python-ART/tree/master
