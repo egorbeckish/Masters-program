@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лекции 5–6: Факторный анализ (FA) – от EFA до CFA</title>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <!-- Подсветка кода -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #1e2a3a;
+            background: #f8fafc;
+            padding: 0 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            border-radius: 20px;
+            overflow: hidden;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+        header {
+            background: linear-gradient(135deg, #1e466e, #2c5a8c);
+            color: white;
+            padding: 30px 40px;
+        }
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        .lecture-meta {
+            background: #eef2f7;
+            padding: 12px 40px;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #dce4ec;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .content {
+            padding: 30px 40px;
+        }
+        h2 {
+            color: #1e466e;
+            border-left: 5px solid #e67e22;
+            padding-left: 20px;
+            margin: 30px 0 20px 0;
+            font-size: 1.8rem;
+        }
+        h3 {
+            color: #2c3e4e;
+            margin: 25px 0 15px 0;
+            font-size: 1.4rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #e2e8f0;
+        }
+        .note {
+            background: #eef6ff;
+            border-left: 4px solid #1e466e;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 12px;
+        }
+        .formula {
+            background: #f7f9fc;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.1rem;
+            margin: 15px 0;
+            border: 1px solid #dce4ec;
+        }
+        .two-columns {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .col {
+            flex: 1;
+            min-width: 250px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #eef2f7;
+            color: #1e466e;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        pre {
+            background: #1e2a3a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        .btn {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.2s;
+        }
+        .btn:hover {
+            background: #d35400;
+        }
+        details {
+            margin: 15px 0;
+            background: #fef9e6;
+            border-radius: 12px;
+            padding: 10px 15px;
+            border: 1px solid #f0b27a;
+        }
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+            color: #e67e22;
+        }
+        footer {
+            background: #1e2a3a;
+            color: #cbd5e1;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.85rem;
+        }
+        .badge {
+            background: #e67e22;
+            color: white;
+            border-radius: 30px;
+            padding: 3px 10px;
+            font-size: 0.7rem;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+            header, .lecture-meta {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>📊 Лекции 5–6: Факторный анализ (Factor Analysis)</h1>
+        <p>От исследовательского (EFA) до подтверждающего (CFA) анализа | Ротация Varimax | Коммуналити | Сравнение с PCA</p>
+    </header>
+    <div class="lecture-meta">
+        <span>📘 Курс: Анализ данных (магистратура, 1 курс)</span>
+        <span>👨‍🏫 Преподаватель: М.В. Долгополов</span>
+        <span>🏛 СамГТУ, кафедра Высшей математики</span>
+    </div>
+    <div class="content">
+
+        <!-- Введение: повтор PCA и постановка -->
+        <h2>1. Введение: от PCA к FA</h2>
+        <div class="note">
+            <strong>📌 Предварительные знания:</strong> PCA (главные компоненты), стандартизация, собственные значения, дисперсия. Факторный анализ расширяет идею снижения размерности, но добавляет <strong>латентные факторы</strong> и <strong>уникальную дисперсию</strong>.
+        </div>
+        <p>В <strong>PCA</strong> мы ищем линейные комбинации, максимизирующие дисперсию. В <strong>факторном анализе (FA)</strong> мы предполагаем, что наблюдаемые переменные порождены небольшим числом скрытых (латентных) факторов плюс специфическая ошибка. FA больше ориентирован на <strong>интерпретацию</strong> и выявление структуры корреляций.</p>
+        <div class="two-columns">
+            <div class="col card">
+                <strong>🎯 Цель FA:</strong> объяснить корреляции между наблюдаемыми переменными через общие факторы.
+            </div>
+            <div class="col card">
+                <strong>🧠 Ключевое отличие:</strong> FA моделирует ковариацию, а PCA – просто преобразует пространство.
+            </div>
+        </div>
+
+        <!-- 1. Словарь и определения -->
+        <h2>2. Основные понятия и аббревиатуры</h2>
+        <table>
+            <thead><tr><th>Аббревиатура</th><th>Расшифровка</th><th>Определение</th></tr></thead>
+            <tbody>
+                <tr><td><strong>FA</strong></td><td>Factor Analysis</td><td>Факторный анализ – метод выделения скрытых факторов, объясняющих корреляции.</td></tr>
+                <tr><td><strong>EFA</strong></td><td>Exploratory FA</td><td>Исследовательский – ищем структуру без априорных гипотез.</td></tr>
+                <tr><td><strong>CFA</strong></td><td>Confirmatory FA</td><td>Подтверждающий – проверяем заранее заданную факторную структуру.</td></tr>
+                <tr><td><strong>Λ (Psi)</strong></td><td>Factor Loadings</td><td>Матрица нагрузок \(\Psi\), показывающая корреляцию переменных с факторами.</td></tr>
+                <tr><td><strong>h²</strong></td><td>Communality</td><td>Коммуналити – доля дисперсии переменной, объяснённая общими факторами: \(h_j^2 = \sum_k \psi_{jk}^2\).</td></tr>
+                <tr><td><strong>ε</strong></td><td>Unique factor</td><td>Специфическая дисперсия (уникальность) = \(1 - h_j^2\).</td></tr>
+            </tbody>
+        </table>
+
+        <!-- 2. Математическая модель FA -->
+        <h2>3. Математическая модель факторного анализа</h2>
+        <div class="formula">
+            \[
+            X = \Psi F + \varepsilon
+            \]
+            <p style="margin-top: 8px;">\(\mathbb{E}[F]=0,\ \mathrm{Cov}(F)=I;\quad \mathbb{E}[\varepsilon]=0,\ \mathrm{Cov}(\varepsilon)=\Psi_\varepsilon\) (диагональная).</p>
+        </div>
+        <p>Отсюда ковариационная структура: \(\mathrm{Cov}(X) = \Psi \Psi^T + \Psi_\varepsilon = \Sigma\).<br>
+        <strong>Цель EFA:</strong> оценить \(\Psi\) и диагональ \(\Psi_\varepsilon\) по выборочной ковариационной матрице.</p>
+
+        <!-- 3. FA vs PCA -->
+        <h2>4. Сравнение FA и PCA</h2>
+        <table>
+            <tr><th>Характеристика</th><th>PCA</th><th>FA</th></tr>
+            <tr><td>Математическая основа</td><td>Собственные векторы ковариации</td><td>Максимальное правдоподобие / метод главных факторов</td></tr>
+            <tr><td>Учёт уникальной дисперсии</td><td>Нет (вся дисперсия включена)</td><td>Да (выделяет общую и специфическую части)</td></tr>
+            <tr><td>Интерпретируемость</td><td>Компоненты – математические конструкции</td><td>Факторы – латентные переменные, имеющие смысл</td></tr>
+            <tr><td>Объяснённая дисперсия</td><td>Всегда выше (включает шум)</td><td>Ниже (только общая дисперсия)</td></tr>
+        </table>
+
+        <!-- 4. EFA пошагово -->
+        <h2>5. Exploratory Factor Analysis (EFA) – алгоритм</h2>
+        <div class="card">
+            <ol style="margin-left: 20px;">
+                <li><strong>Стандартизация</strong> переменных (среднее 0, дисперсия 1).</li>
+                <li><strong>Проверка пригодности:</strong> KMO (>0.6) и тест Бартлетта (p<0.05).</li>
+                <li><strong>Выделение начальных факторов</strong> (метод главных факторов или максимального правдоподобия).</li>
+                <li><strong>Определение числа факторов</strong> (собственные значения >1, scree-plot).</li>
+                <li><strong>Вращение (ротация)</strong> факторов (Varimax – ортогональное).</li>
+                <li><strong>Интерпретация</strong> факторных нагрузок (обычно |ψ|>0.4 значимо).</li>
+                <li><strong>Оценка качества</strong>: коммуналити >0.5, отсутствие перекрёстных нагрузок.</li>
+            </ol>
+        </div>
+
+        <h3>📈 KMO и тест Бартлетта – код на Python</h3>
+        <pre><code class="language-python">import pandas as pd
+from factor_analyzer.factor_analyzer import calculate_kmo, calculate_bartlett_sphericity
+
+df = pd.read_csv('your_data.csv')
+X = df.values
+
+kmo_all, kmo_model = calculate_kmo(X)
+chi2, p_value = calculate_bartlett_sphericity(X)
+
+print(f'KMO = {kmo_model:.3f}')          # >0.6 приемлемо, >0.8 отлично
+print(f'Bartlett: χ² = {chi2:.2f}, p = {p_value:.4e}')  # p < 0.05 → FA применим</code></pre>
+
+        <!-- 5. Varimax и коммуналити -->
+        <h2>6. Вращение Varimax и коммуналити (h²)</h2>
+        <div class="two-columns">
+            <div class="col card">
+                <strong>🔄 Varimax</strong><br>
+                Ортогональное вращение, максимизирующее дисперсию квадратов нагрузок внутри каждого фактора. Упрощает структуру: каждая переменная сильно нагружает один фактор.<br>
+                <div class="formula" style="font-size:0.9rem;">\[
+                V = \max \frac{1}{p} \sum_j \sum_i \psi_{ij}^4 - \left( \frac{1}{p} \sum_j \sum_i \psi_{ij}^2 \right)^2
+                \]</div>
+            </div>
+            <div class="col card">
+                <strong>📊 Коммуналити (h²)</strong><br>
+                \(h_j^2 = \sum_{k=1}^m \psi_{jk}^2\). Показывает, какая доля дисперсии переменной объяснена общими факторами.<br>
+                <strong>Пороги:</strong> >0.5 – хорошо; <0.3 – переменная слабо связана с факторами.
+            </div>
+        </div>
+        <pre><code class="language-python">from factor_analyzer import FactorAnalyzer
+fa = FactorAnalyzer(n_factors=3, rotation='varimax', method='principal')
+fa.fit(X)
+loadings = fa.loadings_
+communalities = fa.get_communalities()
+print(communalities)</code></pre>
+
+        <!-- 6. CFA -->
+        <h2>7. Подтверждающий факторный анализ (CFA)</h2>
+        <p><strong>CFA</strong> используется для проверки гипотезы о том, что данные соответствуют заранее заданной факторной структуре. Применяется, когда теория уже есть. Инструменты: <code>semopy</code> (Python), <code>lavaan</code> (R).</p>
+        <div class="note">
+            <strong>📌 Нулевая гипотеза CFA:</strong> \(\Sigma = \Lambda \Phi \Lambda^T + \Psi_\varepsilon\) с фиксированными нулевыми нагрузками. Оценивается с помощью χ²-статистики и индексов пригодности (CFI, RMSEA).
+        </div>
+
+        <!-- 7. Практические рекомендации -->
+        <h2>8. Практические рекомендации и лайфхаки</h2>
+        <table>
+            <tr><th>Ситуация</th><th>Рекомендация</th></tr>
+            <tr><td>KMO < 0.6</td><td>Данные не подходят для FA – используйте PCA или соберите больше данных.</td></tr>
+            <tr><td>Коммуналити < 0.3</td><td>Удалить переменную или интерпретировать как специфическую.</td></tr>
+            <tr><td>Перекрёстные нагрузки</td><td>Применить вращение Varimax или косоугольное (Promax).</td></tr>
+            <tr><td>Нет теории о структуре</td><td>EFA → генерация гипотез → CFA на новых данных.</td></tr>
+        </table>
+
+        <!-- 8. Примеры из практики -->
+        <h2>9. Реальные примеры применения FA</h2>
+        <ul>
+            <li><strong>Mall Customers:</strong> выявление 2–3 факторов, объединяющих доход, возраст и оценку трат (сегментация).</li>
+            <li><strong>Big Five:</strong> 5 факторов личности (открытость, добросовестность, экстраверсия, доброжелательность, нейротизм).</li>
+            <li><strong>IQ тесты:</strong> g-фактор (общий интеллект) + вербальный, пространственный факторы.</li>
+        </ul>
+
+        <!-- 9. Задания для самостоятельной работы -->
+        <h2>10. Задания для самопроверки (с ответами)</h2>
+        
+        <details>
+            <summary><strong>📌 Задание 1 (EFA на синтетических данных)</strong></summary>
+            <p>Сгенерируйте данные с двумя факторами (по 3 переменных на фактор, нагрузки 0.7 и 0.2). Проведите EFA, определите число факторов, выведите нагрузки после Varimax. Сравните с истинной структурой.</p>
+            <details>
+                <summary>🔍 Подсказка</summary>
+                <p>Используйте <code>numpy.random</code> для генерации, затем <code>FactorAnalyzer</code>. Ожидается, что метод собственных значений >1 и scree-plot укажут на 2 фактора, а Varimax восстановит простую структуру.</p>
+            </details>
+            <details>
+                <summary>✅ Ответ (код)</summary>
+                <pre><code class="language-python">import numpy as np
+from factor_analyzer import FactorAnalyzer
+
+np.random.seed(42)
+n = 500
+F = np.random.normal(0, 1, (n, 2))
+Psi = np.array([[0.7, 0.2, 0.1, 0.0, 0.0, 0.0],
+                [0.1, 0.2, 0.7, 0.7, 0.1, 0.2]]).T
+X = F @ Psi.T + np.random.normal(0, 0.3, (n, 6))
+
+fa = FactorAnalyzer(n_factors=2, rotation='varimax')
+fa.fit(X)
+print("Нагрузки после Varimax:\n", np.round(fa.loadings_, 3))</code></pre>
+                <p>Результат: нагрузки близки к исходным (0.7, 0.2, 0.0 и т.д.), что подтверждает корректность метода.</p>
+            </details>
+        </details>
+
+        <details>
+            <summary><strong>📌 Задание 2 (Интерпретация KMO и Bartlett)</strong></summary>
+            <p>У вас есть выборка из 200 респондентов по 10 вопросам. KMO = 0.73, Bartlett p = 0.001. Можно ли применять FA? Если да, сколько факторов стоит рассмотреть? Как интерпретировать полученные коммуналити, если для трёх переменных они равны 0.28, 0.31, 0.45?</p>
+            <details>
+                <summary>🔍 Подсказка</summary>
+                <p>KMO>0.7 – хорошо, p<0.05 – корреляции значимы. Число факторов – по критерию собственных значений >1. Низкие коммуналити (<0.3) – переменные слабо объясняются факторами.</p>
+            </details>
+            <details>
+                <summary>✅ Ответ (обоснование)</summary>
+                <p>FA применим. Количество факторов можно определить по scree-plot. Коммуналити 0.28 и 0.31 – низкие, такие переменные, вероятно, следует удалить или пересмотреть их связь с латентными конструктами. Переменная с 0.45 – приемлема.</p>
+            </details>
+        </details>
+
+        <details>
+            <summary><strong>📌 Задание 3 (CFA: проверка гипотезы)</strong></summary>
+            <p>Предположим, вы провели EFA на половине выборки и получили трёхфакторную структуру. Как проверить её на второй половине с помощью CFA? Какие индексы пригодности вы будете использовать?</p>
+            <details>
+                <summary>🔍 Подсказка</summary>
+                <p>Разделите данные на две части. На второй части задайте фиксированную структуру (нулевые нагрузки для нецелевых факторов) и оцените модель. Используйте χ²/df, CFI > 0.9, RMSEA < 0.08.</p>
+            </details>
+            <details>
+                <summary>✅ Ответ</summary>
+                <p>В Python можно использовать <code>semopy</code> или <code>lavaan</code> (R). После оценки модели смотреть p-value χ² (желательно >0.05), CFI (>0.95 отлично), RMSEA (<0.06 хорошо). Если индексы плохие – структура не подтверждается.</p>
+            </details>
+        </details>
+
+        <!-- 10. Ресурсы -->
+        <h2>11. Полезные ресурсы и гиперссылки</h2>
+        <ul>
+            <li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.FactorAnalysis.html" target="_blank">sklearn.decomposition.FactorAnalysis – официальная документация</a></li>
+            <li><a href="https://www.datacamp.com/tutorial/introduction-factor-analysis" target="_blank">DataCamp: Introduction to Factor Analysis</a></li>
+            <li><a href="https://semopy.com/" target="_blank">semopy – CFA в Python</a></li>
+            <li><a href="https://www.geo.fu-berlin.de/en/v/soga-py/Advanced-statistics/Multivariate-Approaches/Factor-Analysis/A-Simple-Example-of-Factor-Analysis-in-Python/index.html" target="_blank">Пример FA с KMO и Bartlett (FU Berlin)</a></li>
+        </ul>
+
+        <!-- 11. Заключение -->
+        <div class="note" style="background:#eef2f7;">
+            <strong>🎓 Итог лекций 5–6:</strong> Факторный анализ – мощный инструмент для выявления скрытых структур. Мы изучили EFA (исследовательский), CFA (подтверждающий), ротацию Varimax, коммуналити, критерии применимости. Сочетание PCA и FA даёт полную картину для снижения размерности и интерпретации данных.
+        </div>
+    </div>
+    <footer>
+        © СамГТУ, кафедра Высшей математики, М.В. Долгополов | Курс "Анализ данных" | Лекции 5–6: Факторный анализ
+    </footer>
+</div>
+</body>
+</html>

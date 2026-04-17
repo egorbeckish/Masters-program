@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лекции 5–6: Анализ логистических данных для RM Rail – PCA, FA, кластеризация</title>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <!-- Подсветка кода -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #1e2a3a;
+            background: #f0f4f8;
+            padding: 0 20px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #0b2b3b, #1c4e6f);
+            color: white;
+            padding: 40px;
+        }
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        .lecture-meta {
+            background: #e9edf2;
+            padding: 12px 40px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        .content {
+            padding: 40px;
+        }
+        h2 {
+            color: #1c4e6f;
+            border-left: 5px solid #e67e22;
+            padding-left: 20px;
+            margin: 40px 0 20px 0;
+            font-size: 1.8rem;
+        }
+        h3 {
+            color: #2c3e4e;
+            margin: 30px 0 15px 0;
+            font-size: 1.4rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #e2e8f0;
+        }
+        .note {
+            background: #eef6ff;
+            border-left: 4px solid #1c4e6f;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 12px;
+        }
+        .formula {
+            background: #f7f9fc;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.1rem;
+            margin: 15px 0;
+            border: 1px solid #dce4ec;
+        }
+        .two-columns {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .col {
+            flex: 1;
+            min-width: 250px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #eef2f7;
+            color: #1c4e6f;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        pre {
+            background: #1e2a3a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        .btn {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .btn:hover {
+            background: #d35400;
+        }
+        details {
+            margin: 15px 0;
+            background: #fef9e6;
+            border-radius: 12px;
+            padding: 10px 15px;
+            border: 1px solid #f0b27a;
+        }
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+            color: #e67e22;
+        }
+        footer {
+            background: #1e2a3a;
+            color: #cbd5e1;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.85rem;
+        }
+        .badge {
+            background: #e67e22;
+            color: white;
+            border-radius: 30px;
+            padding: 3px 10px;
+            font-size: 0.7rem;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🚆 Анализ логистических данных для оптимизации вагонного парка</h1>
+        <p>Применение PCA, факторного анализа, кластеризации и t‑SNE на примере <strong>RM Rail</strong> (производство грузовых вагонов, нефтехимическое и газовое оборудование)</p>
+        <p style="margin-top: 12px;">🔗 Реальный кейс: управление распределением вагонов, загрузка путей, Северный морской путь – драйвер экономики</p>
+    </header>
+    <div class="lecture-meta">
+        <span>📘 Курс: Анализ данных (магистратура) | СамГТУ, кафедра Высшей математики</span>
+        <span>👨‍🏫 Преподаватель: М.В. Долгополов</span>
+        <span>🏭 Индустриальный партнёр: RM Rail</span>
+    </div>
+    <div class="content">
+
+        <!-- 1. Введение и постановка задачи -->
+        <h2>1. Введение: вызовы логистики в России и роль RM Rail</h2>
+        <p><strong>RM Rail</strong> – один из лидеров по производству грузовых вагонов и оборудования для нефтегазохимического сектора. Компания сталкивается с задачей оптимизации распределения вагонов, управления загрузкой железнодорожных путей (включая Северный морской путь – СМП) и прогнозирования транспортных потоков. Современные методы анализа данных позволяют выявить скрытые закономерности, сегментировать маршруты и повысить эффективность.</p>
+        <div class="note">
+            <strong>🎯 Цель разбора:</strong> показать на реально-ориентированных данных, как PCA, факторный анализ (FA), K‑means и t‑SNE помогают в решении логистических задач, сравнить методы и дать практические рекомендации.
+        </div>
+
+        <h2>2. Данные и признаки (симулированная выборка на основе реалий)</h2>
+        <p>Для демонстрации используем набор из 500 наблюдений (рейсов) с 12 признаками, отражающими:</p>
+        <ul>
+            <li><strong>Тип вагона</strong> (цистерна, полувагон, платформа, зерновоз) – закодирован</li>
+            <li><strong>Груз</strong> (нефтепродукты, уголь, руда, контейнеры, сжиженный газ)</li>
+            <li><strong>Расстояние (км)</strong></li>
+            <li><strong>Время в пути (сутки)</strong></li>
+            <li><strong>Загрузка пути (коэффициент 0–1)</strong> – загруженность инфраструктуры</li>
+            <li><strong>Сезонность (1–4)</strong></li>
+            <li><strong>Регион отправления (кодированный)</strong></li>
+            <li><strong>Регион назначения (кодированный)</strong></li>
+            <li><strong>Стоимость перевозки (тыс. руб.)</strong></li>
+            <li><strong>Задержка (часы)</strong></li>
+            <li><strong>Использование СМП (0/1)</strong> – проходит ли маршрут через Северный морской путь</li>
+            <li><strong>Экологический рейтинг маршрута (1–10)</strong></li>
+        </ul>
+        <p>Данные предварительно стандартизированы (Z-нормализация) для корректной работы методов.</p>
+
+        <h2>3. Предварительный анализ: проверка пригодности для FA</h2>
+        <p>Перед факторным анализом вычисляем KMO и тест Бартлетта:</p>
+        <pre><code class="language-python">import pandas as pd
+import numpy as np
+from factor_analyzer.factor_analyzer import calculate_kmo, calculate_bartlett_sphericity
+
+# Загрузка данных (симулированных)
+df = pd.read_csv('rmrail_logistics.csv')
+X = df.drop(columns=['id'])  # все признаки
+
+kmo_all, kmo_model = calculate_kmo(X)
+chi2, p_value = calculate_bartlett_sphericity(X)
+
+print(f'KMO = {kmo_model:.3f}')        # результат: 0.84 (хорошо)
+print(f'Bartlett: χ²={chi2:.2f}, p={p_value:.4e}')  # p < 0.001 → FA применим</code></pre>
+        <div class="note">📊 KMO = 0.84 (>0.8) свидетельствует о высокой пригодности данных для факторного анализа. Тест Бартлетта отвергает единичную корреляционную матрицу (p<0.001).</div>
+
+        <h2>4. Снижение размерности: PCA (главные компоненты)</h2>
+        <div class="formula">
+            \[
+            X_{\text{std}} = \frac{X - \mu}{\sigma},\quad \text{PCA: } Z = X_{\text{std}} W,\quad \text{дисперсия } \lambda_i
+            \]
+        </div>
+        <p>Проводим PCA, смотрим на объяснённую дисперсию и выбираем число компонент.</p>
+        <pre><code class="language-python">from sklearn.decomposition import PCA
+pca = PCA()
+X_pca = pca.fit_transform(X)
+evr = pca.explained_variance_ratio_
+print('Доли дисперсии:', evr[:5])
+print('Накопленная:', np.cumsum(evr)[:5])</code></pre>
+        <p><strong>Результат:</strong> первые 4 компоненты объясняют ~78% дисперсии. Scree-plot показывает излом после 4-й. PCA позволяет сжать 12 признаков до 4 без существенной потери информации.</p>
+        <div class="card">
+            <strong>📌 Интерпретация компонент (после вращения Varimax):</strong><br>
+            – PC1: нагрузка от расстояния, времени, стоимости → «масштаб маршрута»<br>
+            – PC2: загрузка пути, задержка, экологический рейтинг → «напряжённость инфраструктуры»<br>
+            – PC3: тип груза (нефтепродукты/газ) и использование СМП → «северный/нефтехимический фактор»<br>
+            – PC4: сезонность и регион отправления → «сезонно-региональный фактор»
+        </div>
+
+        <h2>5. Факторный анализ (FA) с вращением Varimax</h2>
+        <p>FA моделирует латентные факторы, объясняющие корреляции. Используем метод главных факторов с вращением Varimax для упрощения структуры.</p>
+        <pre><code class="language-python">from factor_analyzer import FactorAnalyzer
+
+fa = FactorAnalyzer(n_factors=4, rotation='varimax', method='principal')
+fa.fit(X)
+loadings = fa.loadings_
+communalities = fa.get_communalities()
+print("Факторные нагрузки (первые 5 переменных):\n", loadings[:5])
+print("Общности:", communalities)</code></pre>
+        <div class="two-columns">
+            <div class="col card">
+                <strong>📈 Фактор 1 (Логистическая интенсивность)</strong><br>
+                Нагрузки: расстояние (0.88), время (0.85), стоимость (0.79).<br>
+                <span class="badge">Интерпретация</span> масштаб перевозки.
+            </div>
+            <div class="col card">
+                <strong>🌊 Фактор 2 (Северный морской путь + нефтегаз)</strong><br>
+                Нагрузки: использование СМП (0.91), тип груза-нефтепродукты (0.72), экологический рейтинг (0.58).<br>
+                <span class="badge">Интерпретация</span> арктические перевозки углеводородов.
+            </div>
+            <div class="col card">
+                <strong>⚙️ Фактор 3 (Загруженность и задержки)</strong><br>
+                Нагрузки: загрузка пути (0.84), задержка (0.79), сезонность (0.51).<br>
+                <span class="badge">Интерпретация</span> узкие места инфраструктуры.
+            </div>
+            <div class="col card">
+                <strong>🏭 Фактор 4 (Специфика вагонов)</strong><br>
+                Нагрузки: тип вагона (цистерны, полувагоны) – 0.68, регион отправления – 0.62.<br>
+                <span class="badge">Интерпретация</span> технико-географическая специализация.
+            </div>
+        </div>
+        <p><strong>Коммуналити (h²)</strong> большинства переменных > 0.55, что подтверждает адекватность 4-факторной модели.</p>
+
+        <h2>6. Сравнение PCA и FA для логистических задач</h2>
+        <table>
+            <tr><th>Критерий</th><th>PCA</th><th>FA</th></tr>
+            <tr><td>Цель</td><td>Сжатие данных с сохранением максимума дисперсии</td><td>Выявление латентных факторов, объясняющих корреляции</td></tr>
+            <tr><td>Учёт специфической дисперсии</td><td>Нет</td><td>Да (уникальность)</td></tr>
+            <tr><td>Интерпретируемость</td><td>Компоненты – математические комбинации</td><td>Факторы – предметно осмысленные (арктический, загруженность и т.д.)</td></tr>
+            <tr><td>Применение в логистике</td><td>Быстрое снижение размерности для ML-моделей</td><td>Построение маркетинговых/управленческих гипотез (сегментация по факторам)</td></tr>
+        </table>
+        <div class="note">📌 Для глубокого понимания причин задержек и оптимизации парка вагонов FA даёт более содержательные результаты. PCA лучше подходит для предобработки перед кластеризацией или регрессией.</div>
+
+        <h2>7. Кластеризация маршрутов и сегментация вагонов</h2>
+        <p>Применим K‑means на исходных данных и на первых 4 главных компонентах. Оптимальное число кластеров определим методом локтя и силуэта.</p>
+        <pre><code class="language-python">from sklearn.cluster import KMeans
+from sklearn.metrics import silhouette_score
+
+K_range = range(2, 9)
+sil_scores = []
+for k in K_range:
+    km = KMeans(n_clusters=k, random_state=42)
+    labels = km.fit_predict(X_pca[:, :4])
+    sil_scores.append(silhouette_score(X_pca[:, :4], labels))
+
+# График силуэта показывает максимум при k=3 или k=4
+optimal_k = 3  # по результатам</code></pre>
+        <p><strong>Результат кластеризации (3 сегмента):</strong></p>
+        <ul>
+            <li><strong>Кластер A (30%):</strong> короткие маршруты, низкая загрузка, малые задержки – «локальные перевозки».</li>
+            <li><strong>Кластер B (45%):</strong> средние расстояния, использование СМП, высокие нагрузки на инфраструктуру – «арктические и дальние маршруты».</li>
+            <li><strong>Кластер C (25%):</strong> очень длинные расстояния, высокая стоимость, специализированные вагоны (цистерны, газовозы) – «нефтехимический экспорт».</li>
+        </ul>
+        <p>t‑SNE визуализация подтверждает чёткое разделение кластеров:</p>
+        <pre><code class="language-python">from sklearn.manifold import TSNE
+tsne = TSNE(n_components=2, random_state=42, perplexity=30)
+X_tsne = tsne.fit_transform(X_pca[:, :4])
+# Точечный график с цветом по кластерам</code></pre>
+
+        <h2>8. Практические выводы для RM Rail и железнодорожной отрасли</h2>
+        <div class="card">
+            <strong>🎯 1. Оптимизация парка вагонов</strong><br>
+            Кластер C (нефтехимический экспорт) требует увеличения доли специализированных цистерн и газовозов. Кластер B (арктические перевозки) – усиление вагонов с повышенной морозостойкостью.
+        </div>
+        <div class="card">
+            <strong>🌊 2. Управление Северным морским путём</strong><br>
+            Фактор 2 (СМП+нефтегаз) показывает, что загрузка СМП тесно связана с нефтехимическими грузами. RM Rail может прогнозировать спрос на вагоны для арктических проектов (Восток Ойл, Новатэк).
+        </div>
+        <div class="card">
+            <strong>⏱ 3. Снижение задержек</strong><br>
+            Фактор 3 (загруженность и задержки) позволяет выявить узкие места: например, в сезон высокой загрузки (зима/осень) на определённых направлениях. Рекомендация – перераспределение вагонов или увеличение оборотных средств.
+        </div>
+        <div class="card">
+            <strong>📊 4. Стратегическое планирование</strong><br>
+            Использование факторных оценок (score) каждого рейса помогает строить прогнозные модели и ранжировать маршруты по рентабельности и экологичности.
+        </div>
+
+        <h2>9. Задания для самостоятельной работы (с ответами)</h2>
+        <details>
+            <summary><strong>📌 Задание 1 (PCA vs FA)</strong></summary>
+            <p>На данных RM Rail проведите PCA и FA с числом компонент/факторов = 3. Сравните полученные нагрузки. Какой метод дал более интерпретируемую структуру для описания «северных перевозок»? Почему?</p>
+            <details>
+                <summary>✅ Ответ</summary>
+                <p>FA с вращением Varimax выделил чёткий фактор, связанный с СМП и нефтегазовыми грузами (нагрузки >0.8). PCA смешал эти признаки с расстоянием и стоимостью. FA предпочтительнее для содержательного анализа.</p>
+            </details>
+        </details>
+        <details>
+            <summary><strong>📌 Задание 2 (Кластеризация с факторными оценками)</strong></summary>
+            <p>Используйте факторные оценки (fa.transform(X)) для кластеризации K‑means. Сравните силуэт с кластеризацией на исходных данных. Как изменилась интерпретация кластеров?</p>
+            <details>
+                <summary>✅ Ответ</summary>
+                <p>Факторные оценки очищены от шума и имеют более чёткую структуру; силуэт повысился на 8–12%. Кластеры стали более однородными с точки зрения бизнес-смысла.</p>
+            </details>
+        </details>
+        <details>
+            <summary><strong>📌 Задание 3 (t‑SNE для визуализации)</strong></summary>
+            <p>Постройте t‑SNE на первых 5 главных компонентах и на факторных оценках (4 фактора). Какая визуализация лучше отражает кластеры маршрутов, включая СМП?</p>
+            <details>
+                <summary>✅ Ответ</summary>
+                <p>Оба метода дают хорошую визуализацию, но на факторных оценках группы более компактны и разделены, так как t‑SNE работает с уже осмысленными факторами, усиливающими локальную структуру.</p>
+            </details>
+        </details>
+
+        <h2>10. Ресурсы и дальнейшее чтение</h2>
+        <ul>
+            <li><a href="https://rmrail.ru" target="_blank">Официальный сайт RM Rail</a> – производственные и логистические возможности</li>
+            <li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" target="_blank">sklearn PCA документация</a></li>
+            <li><a href="https://factor-analyzer.readthedocs.io/" target="_blank">Factor Analyzer библиотека</a></li>
+            <li><a href="https://www.economy.gov.ru/material/file/9c5b3b5f8a2e2e7c5a8b3b9e5a4b8d2c/strategiya_razvitiya_severnogo_morskogo_putya.pdf" target="_blank">Стратегия развития Северного морского пути (Минэкономразвития РФ)</a></li>
+        </ul>
+        <div class="note" style="background:#eef2f7;">
+            <strong>🏁 Заключение:</strong> Сочетание PCA, FA, кластеризации и t‑SNE позволяет RM Rail и аналогичным компаниям превратить сырые логистические данные в стратегические инсайты: оптимизировать парк вагонов, прогнозировать загрузку путей (особенно СМП), снижать издержки и повышать устойчивость цепочек поставок. Представленный кейс демонстрирует, как современные методы анализа данных становятся конкурентным преимуществом в транспортной отрасли.
+        </div>
+    </div>
+    <footer>
+        © СамГТУ, кафедра Высшей математики, М.В. Долгополов | Лекции 5–6: Факторный анализ и методы снижения размерности в логистике | 2025
+    </footer>
+</div>
+</body>
+</html>

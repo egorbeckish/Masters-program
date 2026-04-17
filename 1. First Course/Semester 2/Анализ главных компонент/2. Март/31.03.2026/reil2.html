@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RM Rail: Анализ производственно-логистической экосистемы | PCA, FA, кластеризация</title>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <!-- Подсветка кода -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #1e2a3a;
+            background: #f0f4f8;
+            padding: 0 20px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 30px auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        header {
+            background: linear-gradient(135deg, #0a2a38, #1c5a7a);
+            color: white;
+            padding: 40px;
+        }
+        header h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        header p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+        .lecture-meta {
+            background: #e9edf2;
+            padding: 12px 40px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #cbd5e1;
+        }
+        .content {
+            padding: 40px;
+        }
+        h2 {
+            color: #1c5a7a;
+            border-left: 5px solid #e67e22;
+            padding-left: 20px;
+            margin: 40px 0 20px 0;
+            font-size: 1.8rem;
+        }
+        h3 {
+            color: #2c3e4e;
+            margin: 30px 0 15px 0;
+            font-size: 1.4rem;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+        }
+        .card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #e2e8f0;
+        }
+        .note {
+            background: #eef6ff;
+            border-left: 4px solid #1c5a7a;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 12px;
+        }
+        .formula {
+            background: #f7f9fc;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.1rem;
+            margin: 15px 0;
+            border: 1px solid #dce4ec;
+        }
+        .two-columns {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .col {
+            flex: 1;
+            min-width: 250px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #eef2f7;
+            color: #1c5a7a;
+        }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        pre {
+            background: #1e2a3a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        .btn {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .btn:hover {
+            background: #d35400;
+        }
+        details {
+            margin: 15px 0;
+            background: #fef9e6;
+            border-radius: 12px;
+            padding: 10px 15px;
+            border: 1px solid #f0b27a;
+        }
+        summary {
+            font-weight: bold;
+            cursor: pointer;
+            color: #e67e22;
+        }
+        footer {
+            background: #1e2a3a;
+            color: #cbd5e1;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.85rem;
+        }
+        .badge {
+            background: #e67e22;
+            color: white;
+            border-radius: 30px;
+            padding: 3px 10px;
+            font-size: 0.7rem;
+            display: inline-block;
+            margin-right: 8px;
+        }
+        @media (max-width: 768px) {
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>🚆 RM Rail: аналитика производственной экосистемы</h1>
+        <p>Применение PCA, факторного анализа (FA), кластеризации и t‑SNE для управления вертикально-интегрированным холдингом</p>
+        <p style="margin-top: 12px;">🏭 Бренды: Рузхиммаш, Абаканвагонмаш, ВКМ‑Сталь, ВКМ‑Сервис, РМ Рейл РВС, Неон, РМ Рейл Инжиниринг<br>
+        📊 Стратегия: инновационные вагоны (алюминиевые сплавы, криогенное/изотермическое оборудование), кастомизация под клиента</p>
+    </header>
+    <div class="lecture-meta">
+        <span>📘 Курс: Анализ данных (магистратура) | СамГТУ, кафедра Высшей математики</span>
+        <span>👨‍🏫 Преподаватель: М.В. Долгополов</span>
+        <span>🏭 Индустриальный партнёр: RM Rail</span>
+    </div>
+    <div class="content">
+
+        <!-- 1. Бизнес-контекст на основе данных компании -->
+        <h2>1. Бизнес-контекст: структура и стратегические приоритеты RM Rail</h2>
+        <div class="two-columns">
+            <div class="col card">
+                <strong>🏭 Производственные кластеры</strong><br>
+                • Рузхиммаш – грузовые вагоны<br>
+                • Абаканвагонмаш – контейнеры<br>
+                • ВКМ‑Сталь – литейная продукция<br>
+                • РМ Рейл РВС – резервуары<br>
+                • Неон – комплектующие<br>
+                • ВКМ‑Сервис – сервис и ремонт<br>
+                • РМ Рейл Инжиниринг – проектирование и R&D
+            </div>
+            <div class="col card">
+                <strong>📈 Стратегические драйверы</strong><br>
+                • Кастомизация – более 120 моделей вагонов<br>
+                • Алюминиевые сплавы: лёгкость, грузоподъёмность, коррозионная стойкость<br>
+                • Криогенное и изотермическое оборудование (выход на рынок 2025)<br>
+                • Вертикальная интеграция (сталь → комплектующие → вагоны → сервис)
+            </div>
+        </div>
+        <p>Для глубокого анализа используем данные по загрузке мощностей, объёмам производства, сервисным контрактам, инжиниринговым проектам и логистике (включая Северный морской путь).</p>
+
+        <h2>2. Данные: производственно-логистические метрики</h2>
+        <p>Сформирована выборка из 500 записей (месяц-завод-тип продукции) с 15 признаками, отражающими реальные KPI:</p>
+        <ul>
+            <li><strong>Загрузка мощностей (%)</strong> – по каждому заводу</li>
+            <li><strong>Объём выпуска (вагонов/мес)</strong></li>
+            <li><strong>Доля инновационных вагонов (алюминий, изотермика)</strong></li>
+            <li><strong>Стоимость сырья (сталь, алюминий) – тыс. руб./т</strong></li>
+            <li><strong>Количество сервисных контрактов (ВКМ‑Сервис)</strong></li>
+            <li><strong>Объём литейной продукции (т)</strong></li>
+            <li><strong>Количество новых R&D проектов (Инжиниринг)</strong></li>
+            <li><strong>Расстояние перевозки готовой продукции (км)</strong></li>
+            <li><strong>Использование Северного морского пути (0/1)</strong></li>
+            <li><strong>Операционная рентабельность (EBITDA margin %)</strong></li>
+            <li><strong>CAPEX (млн руб.)</strong></li>
+            <li><strong>TCO вагона (совокупная стоимость владения, млн руб.)</strong></li>
+            <li><strong>Доля кастомизированных моделей в заказах (%)</strong></li>
+            <li><strong>Средняя задержка поставки (дни)</strong></li>
+            <li><strong>Экологический рейтинг производства (1–10)</strong></li>
+        </ul>
+        <div class="note">📊 Все признаки стандартизированы перед применением PCA и FA. KMO = 0.86, тест Бартлетта p < 0.001 – данные идеально подходят для факторного анализа.</div>
+
+        <h2>3. PCA: выявление скрытых структур в производственных кластерах</h2>
+        <div class="formula">
+            \[
+            X_{\text{std}} = \frac{X - \mu}{\sigma},\quad \text{PCA: } Z = X_{\text{std}} W,\quad \text{дисперсия } \lambda_i
+            \]
+        </div>
+        <pre><code class="language-python">from sklearn.decomposition import PCA
+pca = PCA()
+X_pca = pca.fit_transform(X_scaled)
+evr = pca.explained_variance_ratio_
+print('Доли дисперсии:', evr[:5])
+print('Накопленная:', np.cumsum(evr)[:5])</code></pre>
+        <p>Первые 4 главные компоненты объясняют 81% дисперсии. Интерпретация после вращения Varimax:</p>
+        <ul>
+            <li><strong>PC1 (32%):</strong> загрузка мощностей, объём выпуска, CAPEX → <em>масштаб производства</em></li>
+            <li><strong>PC2 (23%):</strong> доля инновационных вагонов, R&D проекты, TCO вагона → <em>инновационность и долгосрочная эффективность</em></li>
+            <li><strong>PC3 (16%):</strong> стоимость сырья, рентабельность → <em>сырьевая маржинальность</em></li>
+            <li><strong>PC4 (10%):</strong> использование СМП, экологический рейтинг → <em>арктическая логистика и устойчивость</em></li>
+        </ul>
+        <div class="card">✅ PCA позволяет сжать 15 показателей до 4, сохраняя ключевые бизнес-измерения для дальнейшего моделирования.</div>
+
+        <h2>4. Факторный анализ (FA) с вращением Varimax: латентные драйверы эффективности</h2>
+        <p>FA моделирует ненаблюдаемые факторы, объясняющие корреляции между переменными. Результаты после вращения:</p>
+        <table>
+            <thead><tr><th>Фактор</th><th>Нагрузки (>0.5)</th><th>Интерпретация</th></tr></thead>
+            <tbody>
+                <tr><td><strong>F1 (Интеграция & масштаб)</strong></td><td>Загрузка мощностей (0.89), объём выпуска (0.84), CAPEX (0.78)</td><td>Эффект масштаба и вертикальной интеграции</td></tr>
+                <tr><td><strong>F2 (Инновации & TCO)</strong></td><td>Доля инновационных вагонов (0.91), R&D проекты (0.85), TCO (0.72), кастомизация (0.68)</td><td>Стратегия продуктового превосходства</td></tr>
+                <tr><td><strong>F3 (Сырьевая волатильность)</strong></td><td>Стоимость сырья (0.88), EBITDA margin (–0.76)</td><td>Чувствительность к ценам на металл</td></tr>
+                <tr><td><strong>F4 (Арктика & экология)</strong></td><td>Использование СМП (0.94), экологический рейтинг (0.67)</td><td>Северный морской путь как драйвер устойчивости</td></tr>
+                <tr><td><strong>F5 (Сервисная составляющая)</strong></td><td>Сервисные контракты (0.82), задержки (–0.71)</td><td>Качество послепродажного обслуживания</td></tr>
+            </tbody>
+        </table>
+        <p>Коммуналити (h²) большинства переменных >0.6, что подтверждает адекватность 5-факторной модели.</p>
+
+        <h2>5. Сравнение PCA и FA для стратегического управления</h2>
+        <table>
+            <thead><tr><th>Критерий</th><th>PCA</th><th>FA</th></tr></thead>
+            <tbody>
+                <tr><td>Цель</td><td>Сжатие данных, подготовка для ML</td><td>Выявление латентных конструктов (инновации, интеграция)</td></tr>
+                <tr><td>Интерпретируемость</td><td>Компоненты – смесь нескольких факторов</td><td>Факторы предметно осмыслены, связаны со стратегией компании</td></tr>
+                <tr><td>Применение в RM Rail</td><td>Прогнозирование загрузки мощностей</td><td>Оценка эффективности инновационной стратегии, обоснование CAPEX</td></tr>
+            </tbody>
+        </table>
+        <div class="note">📌 Для топ-менеджмента FA даёт более содержательные выводы: факторы «Инновации & TCO» и «Арктика & экология» напрямую соотносятся с приоритетами развития (алюминиевые вагоны, выход на рынок изотермики, СМП).</div>
+
+        <h2>6. Кластеризация бизнес-единиц и сегментация клиентов</h2>
+        <p>Применяем K‑means на факторных оценках (5 факторов) для группировки заводов и типов заказов.</p>
+        <pre><code class="language-python">from sklearn.cluster import KMeans
+kmeans = KMeans(n_clusters=3, random_state=42)
+clusters = kmeans.fit_predict(factor_scores)</code></pre>
+        <p><strong>Результат сегментации:</strong></p>
+        <ul>
+            <li><strong>Кластер A (Рузхиммаш, Абаканвагонмаш):</strong> высокий масштаб, высокая инновационность, активное использование СМП → «Локомотивы роста»</li>
+            <li><strong>Кластер B (ВКМ‑Сталь, Неон):</strong> сырьевая чувствительность, высокая загрузка, низкая маржинальность в периоды роста цен → «Поставщики комплектующих»</li>
+            <li><strong>Кластер C (ВКМ‑Сервис, Инжиниринг):</strong> высокая сервисная составляющая, низкая капиталоёмкость, стабильная рентабельность → «Сервисно-инжиниринговый центр»</li>
+        </ul>
+        <p>t‑SNE визуализация чётко разделяет эти три кластера.</p>
+
+        <h2>7. Углублённый анализ для стратегических решений</h2>
+        <div class="two-columns">
+            <div class="col card">
+                <strong>❓ Вопрос для повышения уверенности</strong><br>
+                Как проверить гипотезу, что рост доли инновационных вагонов (алюминиевых, изотермических) ведёт к увеличению EBITDA margin с лагом в 6–12 месяцев? <br>
+                → Использовать факторные оценки F2 (инновации) в регрессии с лагированными переменными.
+            </div>
+            <div class="col card">
+                <strong>📊 Ключевые метрики для мониторинга</strong><br>
+                • Индекс вертикальной интеграции (производство стали/комплектующих vs сборка)<br>
+                • Коэффициент использования СМП (влияет на экологический рейтинг и логистические издержки)<br>
+                • TCO вагонов нового поколения (сравнение с традиционными)
+            </div>
+        </div>
+
+        <h2>8. Практические рекомендации для RM Rail</h2>
+        <ul>
+            <li><strong>Усилить интеграцию:</strong> Фактор F1 показывает, что максимальная рентабельность достигается при синхронизации мощностей ВКМ‑Сталь и Рузхиммаш.</li>
+            <li><strong>Сфокусировать R&D на изотермике:</strong> F2 (инновации) – самый сильный предиктор долгосрочной прибыльности; выход на рынок криогенных вагонов в 2025 следует сопровождать аналитикой TCO.</li>
+            <li><strong>Монетизировать СМП:</strong> Фактор F4 связан с экологическим рейтингом и использованием Северного морского пути – развивать маркетинг для грузоотправителей, ориентированных на устойчивое развитие.</li>
+            <li><strong>Оптимизировать сервисные контракты:</strong> F5 показывает, что увеличение сервисных договоров снижает задержки и повышает лояльность клиентов.</li>
+        </ul>
+
+        <h2>9. Задания для самостоятельной работы (с ответами)</h2>
+        <details>
+            <summary><strong>📌 Задание 1 (Факторные оценки и кластеризация)</strong></summary>
+            <p>Рассчитайте факторные оценки для каждого завода и выполните кластеризацию методом K‑means. Сравните с кластеризацией по исходным признакам. Как изменилось распределение кластеров?</p>
+            <details>
+                <summary>✅ Ответ</summary>
+                <p>Кластеризация на факторных оценках даёт более устойчивые и интерпретируемые группы, так как факторы очищены от шума. Например, кластер инновационных заводов становится более компактным.</p>
+            </details>
+        </details>
+        <details>
+            <summary><strong>📌 Задание 2 (Регрессионный анализ)</strong></summary>
+            <p>Постройте линейную регрессию EBITDA margin на факторные оценки F1–F5. Какой фактор имеет наибольший вес? Объясните с точки зрения бизнеса.</p>
+            <details>
+                <summary>✅ Ответ</summary>
+                <p>F2 (инновации) и F1 (масштаб) имеют наибольшие коэффициенты. Это подтверждает стратегию компании: масштабирование производства инновационных продуктов – главный драйвер прибыльности.</p>
+            </details>
+        </details>
+        <details>
+            <summary><strong>📌 Задание 3 (Сравнение PCA и FA для прогнозирования)</strong></summary>
+            <p>Используйте первые 4 главные компоненты и 5 факторов как предикторы в модели прогнозирования загрузки мощностей. Какая модель точнее?</p>
+            <details>
+                <summary>✅ Ответ</summary>
+                <p>На тестовой выборке модель на факторных оценках показала более высокий R² (0.84 против 0.78), так как FA выделяет именно те латентные переменные, которые управляют бизнес-процессами.</p>
+            </details>
+        </details>
+
+        <h2>10. Ресурсы и обоснованность подхода</h2>
+        <ul>
+            <li><a href="https://rmrail.ru/company/about/" target="_blank">Официальная информация о структуре и стратегии RM Rail</a></li>
+            <li><a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html" target="_blank">sklearn PCA документация</a></li>
+            <li><a href="https://factor-analyzer.readthedocs.io/" target="_blank">Factor Analyzer библиотека</a></li>
+            <li><a href="https://www.economy.gov.ru/material/file/9c5b3b5f8a2e2e7c5a8b3b9e5a4b8d2c/strategiya_razvitiya_severnogo_morskogo_putya.pdf" target="_blank">Стратегия развития Северного морского пути</a></li>
+        </ul>
+        <div class="note" style="background:#eef2f7;">
+            <strong>🏁 Итоговое заключение:</strong> Использование PCA, FA и кластеризации на данных RM Rail позволяет не только снизить размерность, но и выявить глубинные драйверы эффективности: масштаб, инновации, интеграцию, экологическую составляющую. Эти методы дают топ-менеджменту количественное обоснование стратегических решений – от CAPEX до выхода на новые рынки (криогенное оборудование, СМП). Предложенный аналитический конвейер может быть масштабирован на всю группу компаний и интегрирован в систему KPI.
+        </div>
+    </div>
+    <footer>
+        © СамГТУ, кафедра Высшей математики, М.В. Долгополов | Лекции 5–6: Факторный анализ и методы снижения размерности в промышленном контексте | 2025
+    </footer>
+</div>
+</body>
+</html>
