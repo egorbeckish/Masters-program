@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Создание аналитического приложения на базе компетенций курса</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            color: #1e2a3a;
+            line-height: 1.5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        header {
+            background: linear-gradient(135deg, #1e466e, #2c5a8c);
+            color: white;
+            padding: 30px;
+            border-radius: 24px 24px 0 0;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2rem;
+        }
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #1e466e;
+            border-left: 5px solid #e67e22;
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        h3 {
+            margin: 20px 0 10px 0;
+            color: #2c5a8c;
+        }
+        .grid-2 {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: #f9fafc;
+            border-radius: 16px;
+            padding: 20px;
+            flex: 1;
+            min-width: 250px;
+            border: 1px solid #e2e8f0;
+        }
+        code {
+            background: #eef2f7;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        pre {
+            background: #1e2a3a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .btn {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 0.9rem;
+        }
+        .btn:hover {
+            background: #d35400;
+        }
+        .badge {
+            background: #e67e22;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #eef2f7;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #6c757d;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 30px 30px 0 0;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #e67e22;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>📱 Приложение для аналитики данных: от курса до iOS/Web</h1>
+        <p>Пошаговая инструкция по созданию production-ready приложения с дообучением моделей (PCA, MCA, кластеризация)</p>
+    </header>
+
+    <div class="section">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="arch">🏗 Архитектура</button>
+            <button class="tab-btn" data-tab="backend">⚙️ Backend (FastAPI)</button>
+            <button class="tab-btn" data-tab="frontend">📱 Frontend (iOS/Web)</button>
+            <button class="tab-btn" data-tab="retrain">🔄 Дообучение</button>
+            <button class="tab-btn" data-tab="examples">📊 Примеры</button>
+        </div>
+
+        <!-- Архитектура -->
+        <div id="arch" class="tab-content active">
+            <h3>Общая архитектура аналитического приложения</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <strong>Клиентская часть</strong><br>
+                    - iOS (SwiftUI + CoreML)<br>
+                    - Web (React + Chart.js)<br>
+                    - Ввод данных: CSV/JSON, форма, камера (OCR)<br>
+                    - Визуализация: 2D/3D графики, таблицы
+                </div>
+                <div class="card">
+                    <strong>Бэкенд (Python)</strong><br>
+                    - FastAPI / Django<br>
+                    - Модели: PCA, FA, MCA, KMeans (scikit-learn, prince)<br>
+                    - REST API + WebSockets<br>
+                    - База данных: PostgreSQL + Redis для кэшей
+                </div>
+                <div class="card">
+                    <strong>ML Pipeline</strong><br>
+                    - Предобработка: стандартизация, one-hot<br>
+                    - Обучение моделей (офлайн)<br>
+                    - Дообучение online (инкрементальное обновление)
+                </div>
+                <div class="card">
+                    <strong>DevOps</strong><br>
+                    - Docker + Kubernetes (опционально)<br>
+                    - GitHub Actions (CI/CD)<br>
+                    - Мониторинг дрейфа данных (Evidently AI)
+                </div>
+            </div>
+            <p>🔁 <strong>Обмен данными:</strong> клиент отправляет JSON → бэкенд вычисляет проекции/кластеры → возвращает координаты и метрики → рендеринг.</p>
+        </div>
+
+        <!-- Backend -->
+        <div id="backend" class="tab-content">
+            <h3>Бэкенд на FastAPI + scikit-learn / prince</h3>
+            <pre><code class="language-python"># main.py
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+import numpy as np
+import pandas as pd
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import KMeans
+import prince
+
+app = FastAPI(title="Analytics API")
+
+class DataInput(BaseModel):
+    data: list  # список списков (строки)
+    method: str  # "pca", "mca", "kmeans"
+    n_components: int = 2
+
+# Глобальный кэш моделей (можно сохранять в Redis)
+models = {}
+
+@app.post("/transform")
+def transform(input: DataInput):
+    df = pd.DataFrame(input.data)
+    method = input.method
+    n = input.n_components
+    key = f"{method}_{n}"
+    if key not in models:
+        if method == "pca":
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(df)
+            model = PCA(n_components=n)
+            X_proj = model.fit_transform(X_scaled)
+            models[key] = (scaler, model)
+        elif method == "mca":
+            model = prince.MCA(n_components=n, one_hot=True)
+            X_proj = model.fit_transform(df).values
+            models[key] = model
+        elif method == "kmeans":
+            scaler = StandardScaler()
+            X_scaled = scaler.fit_transform(df)
+            model = KMeans(n_clusters=n, random_state=42)
+            labels = model.fit_predict(X_scaled)
+            X_proj = X_scaled[:, :2]  # для визуализации используем первые 2 компоненты
+            models[key] = (scaler, model)
+        else:
+            raise HTTPException(status_code=400, detail="Unknown method")
+    else:
+        # Применение существующей модели
+        if method == "pca":
+            scaler, model = models[key]
+            X_scaled = scaler.transform(df)
+            X_proj = model.transform(X_scaled)
+        elif method == "mca":
+            model = models[key]
+            X_proj = model.transform(df).values
+        elif method == "kmeans":
+            scaler, model = models[key]
+            X_scaled = scaler.transform(df)
+            labels = model.predict(X_scaled)
+            X_proj = X_scaled[:, :2]  # упрощённо
+    return {"projection": X_proj.tolist(), "explained_variance": getattr(model, "explained_variance_ratio_", None)}
+            </code></pre>
+            <p>🔗 Запуск: <code>uvicorn main:app --reload</code>. Документация Swagger: <code>/docs</code>.</p>
+        </div>
+
+        <!-- Frontend iOS / Web -->
+        <div id="frontend" class="tab-content">
+            <h3>Веб-клиент (React + Chart.js)</h3>
+            <pre><code class="language-javascript">// App.js
+import React, { useState } from 'react';
+import { Scatter } from 'react-chartjs-2';
+import axios from 'axios';
+
+function App() {
+  const [data, setData] = useState([]);
+  const [projection, setProjection] = useState([]);
+  const [method, setMethod] = useState('pca');
+
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const rows = e.target.result.split('\n').map(row => row.split(',').map(Number));
+      setData(rows);
+    };
+    reader.readAsText(file);
+  };
+
+  const analyze = async () => {
+    const response = await axios.post('http://localhost:8000/transform', {
+      data: data,
+      method: method,
+      n_components: 2
+    });
+    setProjection(response.data.projection);
+  };
+
+  const chartData = {
+    datasets: [{
+      label: 'Projected points',
+      data: projection.map(p => ({ x: p[0], y: p[1] })),
+      backgroundColor: 'rgba(230,126,34,0.6)'
+    }]
+  };
+
+  return (
+    &lt;div&gt;
+      &lt;input type="file" onChange={handleFileUpload} /&gt;
+      &lt;select value={method} onChange={e => setMethod(e.target.value)}&gt;
+        &lt;option value="pca"&gt;PCA&lt;/option&gt;
+        &lt;option value="mca"&gt;MCA&lt;/option&gt;
+        &lt;option value="kmeans"&gt;KMeans&lt;/option&gt;
+      &lt;/select&gt;
+      &lt;button onClick={analyze}&gt;Analyze&lt;/button&gt;
+      &lt;Scatter data={chartData} /&gt;
+    &lt;/div&gt;
+  );
+}
+export default App;</code></pre>
+            <h3>iOS клиент (SwiftUI + CoreML)</h3>
+            <pre><code class="language-swift">// ContentView.swift
+import SwiftUI
+import CoreML
+
+struct ContentView: View {
+    @State private var data: [[Double]] = []
+    @State private var projections: [[Double]] = []
+
+    var body: some View {
+        VStack {
+            Button("Load CSV") {
+                // загрузка CSV
+            }
+            Button("Apply PCA") {
+                // вызов бэкенда через URLSession
+            }
+            ScatterPlot(points: projections)
+        }
+    }
+}</code></pre>
+            <p>📱 Для iOS можно также конвертировать обученную модель PCA в CoreML с помощью <code>coremltools</code> и выполнять вычисления на устройстве без сервера.</p>
+        </div>
+
+        <!-- Дообучение -->
+        <div id="retrain" class="tab-content">
+            <h3>Стратегии дообучения моделей</h3>
+            <div class="grid-2">
+                <div class="card">
+                    <strong>1. Инкрементальное обновление PCA</strong><br>
+                    Использование <code>sklearn.decomposition.IncrementalPCA</code> для добавления новых данных без пересчёта всей матрицы.<br>
+                    <code>ipca = IncrementalPCA(n_components=2, batch_size=100)</code>
+                </div>
+                <div class="card">
+                    <strong>2. Онлайн-обучение K‑means</strong><br>
+                    Алгоритм «MiniBatchKMeans» обновляет кластеры порциями.<br>
+                    <code>mbk = MiniBatchKMeans(n_clusters=3, batch_size=50)</code>
+                </div>
+                <div class="card">
+                    <strong>3. Дообучение FA / MCA</strong><br>
+                    Полный пересчёт при накоплении достаточного количества новых наблюдений (например, раз в неделю).<br>
+                    Использовать фоновые задачи (Celery, Airflow).
+                </div>
+                <div class="card">
+                    <strong>4. Active Learning</strong><br>
+                    Пользователь помечает неверные кластеры → модель дообучается на этих примерах (алгоритм «learning with drift»).
+                </div>
+            </div>
+            <p>🔄 <strong>Автоматизация дообучения:</strong> сохраняйте контрольные суммы данных; при изменении распределения (PSI > 0.1) запускайте переобучение.</p>
+            <pre><code class="language-python"># Обнаружение дрейфа (Evidently)
+from evidently.report import Report
+from evidently.metrics import DataDriftTable
+report = Report(metrics=[DataDriftTable()])
+report.run(reference_data=old_df, current_data=new_df)
+drift_score = report.as_dict()['metrics'][0]['result']['number_of_drifted_columns']</code></pre>
+        </div>
+
+        <!-- Примеры приложений -->
+        <div id="examples" class="tab-content">
+            <h3>Примеры реальных приложений на базе компетенций курса</h3>
+            <table>
+                <thead><th>Тип приложения</th><th>Используемые методы</th><th>Особенности</th></thead>
+                <tbody>
+                    <tr><td>Маркетинговая аналитика (CRM)</td><td>MCA, K‑means</td><td>Категориальные опросы → сегментация, push-уведомления</td></tr>
+                    <tr><td>Медицинский скрининг</td><td>FA, PCA</td><td>Снижение размерности биомаркеров, выделение латентных факторов риска</td></tr>
+                    <tr><td>Рекомендательная система товаров</td><td>PCA + косинусная близость</td><td>Уменьшение признакового пространства, коллаборативная фильтрация</td></tr>
+                    <tr><td>Анализ промышленных датчиков</td><td>Kernel PCA, Isomap</td><td>Обнаружение нелинейных аномалий (режимы работы станка)</td></tr>
+                    <tr><td>Социологическое исследование</td><td>CA / MCA</td><td>Карта соответствий мнений и групп респондентов</td></tr>
+                </tbody>
+            </table>
+            <p>📌 Для каждого приложения можно создать отдельный бэкенд-микросервис с общей ML-библиотекой. Мобильный клиент загружает данные и получает готовые координаты для визуализации.</p>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🚀 Быстрый старт: сборка приложения за 1 час</h2>
+        <div class="grid-2">
+            <div class="card">
+                <strong>1. Бэкенд (Python)</strong>
+                <pre><code>pip install fastapi uvicorn scikit-learn prince pandas
+# скопировать код из вкладки Backend
+uvicorn main:app --host 0.0.0.0 --port 8000</code></pre>
+            </div>
+            <div class="card">
+                <strong>2. Веб-клиент (React)</strong>
+                <pre><code>npx create-react-app myapp
+npm install axios react-chartjs-2 chart.js
+# вставить компонент из вкладки Frontend
+npm start</code></pre>
+            </div>
+            <div class="card">
+                <strong>3. iOS клиент (Swift)</strong>
+                <pre><code>// Создать новый проект в Xcode
+// Добавить URLSession запрос к бэкенду
+// Нарисовать график с помощью Swift Charts</code></pre>
+            </div>
+            <div class="card">
+                <strong>4. Деплой</strong>
+                <pre><code># Бэкенд: Railway / Heroku / Docker
+# Фронтенд: Vercel / Netlify
+# Домен и HTTPS (Let's Encrypt)</code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>🧠 Дообучение в production: checklist</h2>
+        <ul>
+            <li>✅ Сохраняйте версии моделей (MLflow, DVC).</li>
+            <li>✅ Логируйте запросы пользователей (аномально много новых данных – сигнал для переобучения).</li>
+            <li>✅ Используйте A/B тестирование: старая модель vs новая для 5% трафика.</li>
+            <li>✅ Внедрите Shadow mode: новая модель работает параллельно, но не влияет на ответ.</li>
+            <li>✅ Автоматический перезапуск конвейера по расписанию (GitHub Actions, Airflow).</li>
+        </ul>
+    </div>
+
+    <footer>
+        © СамГТУ, кафедра Высшей математики, М.В. Долгополов | Практическое руководство по созданию аналитических приложений
+    </footer>
+</div>
+
+<script>
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.dataset.tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
+</script>
+</body>
+</html>

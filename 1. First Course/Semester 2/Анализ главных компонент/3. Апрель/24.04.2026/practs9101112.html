@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Практики 9–12: CA, MCA, MDS, Kernel PCA, Isomap</title>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <!-- D3.js для интерактивной схемы -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            color: #1e2a3a;
+            line-height: 1.5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        header {
+            background: linear-gradient(135deg, #1e466e, #2c5a8c);
+            color: white;
+            padding: 30px;
+            border-radius: 24px 24px 0 0;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2rem;
+        }
+        .lecture-meta {
+            background: #eef2f7;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #1e466e;
+            border-left: 5px solid #e67e22;
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        h3 {
+            margin: 20px 0 10px 0;
+            color: #2c5a8c;
+        }
+        .grid-2 {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        .card {
+            background: #f9fafc;
+            border-radius: 16px;
+            padding: 20px;
+            flex: 1;
+            min-width: 250px;
+            border: 1px solid #e2e8f0;
+        }
+        code {
+            background: #eef2f7;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+        }
+        pre {
+            background: #1e2a3a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .formula {
+            background: #f7f9fc;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.1rem;
+            border: 1px solid #dce4ec;
+        }
+        .btn {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background: #d35400;
+        }
+        .quiz-container {
+            background: #fef9e6;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .quiz-question {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #fff7e0;
+            border-radius: 12px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #6c757d;
+        }
+        .badge {
+            background: #e67e22;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .interactive-svg {
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 10px;
+            margin: 20px 0;
+            border: 1px solid #cbd5e1;
+        }
+        .tooltip {
+            position: absolute;
+            background: #1e466e;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 10;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background: #eef2f7;
+        }
+        a {
+            color: #e67e22;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>📊 Практики 9–12: Многомерный анализ категориальных данных и нелинейное сжатие</h1>
+        <p>Correspondence Analysis (CA) · Multiple Correspondence Analysis (MCA) · Multidimensional Scaling (MDS) · Kernel PCA · Isomap</p>
+    </header>
+    <div class="lecture-meta">
+        <span>📘 Курс: Анализ данных (магистратура)</span>
+        <span>👨‍🏫 Преподаватель: М.В. Долгополов</span>
+        <span>🔄 Связь с предыдущими темами: PCA, FA, кластеризация</span>
+    </div>
+
+    <!-- ========== ИНТЕРАКТИВНАЯ СХЕМА ========== -->
+    <div class="section">
+        <h2>🗺 Интерактивная схема связей практик 9–12 (drag, zoom, tooltips)</h2>
+        <div id="schema-container" class="interactive-svg" style="height: 500px; width: 100%;"></div>
+        <p><small>🔍 Поддерживается масштабирование (колёсико мыши) и перетаскивание. Наведите на узел для подсказки.</small></p>
+    </div>
+
+    <!-- ========== ПРАКТИКА 9: CA ========== -->
+    <div class="section">
+        <h2>📐 Практика 9: Correspondence Analysis (CA)</h2>
+        <p><strong>Цель</strong>: анализ контингентных таблиц (частот/процентов) для выявления связей между категориальными переменными. Применяется в маркетинге, социологии, биоинформатике.</p>
+        <div class="formula">
+            \[
+            \text{Матрица } \mathbf{P} = \frac{N_{ij}}{\sum N_{ij}}, \quad 
+            \text{Профили строк: } \frac{p_{ij}}{p_{i+}}, \quad
+            \text{Расстояние } \chi^2: \quad d^2(i,i') = \sum_j \frac{(p_{ij}/p_{i+} - p_{i'j}/p_{i'+})^2}{p_{+j}}
+            \]
+            <p>SVD: \(\mathbf{D}_r^{-1/2}(\mathbf{P} - \mathbf{r}\mathbf{c}^T)\mathbf{D}_c^{-1/2} = \mathbf{U}\mathbf{\Lambda}\mathbf{V}^T\) → главные координаты.</p>
+        </div>
+        <p><strong>Инструмент</strong>: библиотека <code>prince.CA()</code> (<a href="https://maxhalford.github.io/prince/ca/" target="_blank">документация</a>) или <code>sklearn</code> (самостоятельно).</p>
+        <h3>📌 Пример Python кода (города × типы преступлений)</h3>
+        <pre><code class="language-python">import pandas as pd
+import prince
+import matplotlib.pyplot as plt
+
+# Данные: контингентная таблица
+data = pd.DataFrame({
+    'Угон': [80, 20, 50],
+    'Кража': [30, 70, 40],
+    'Мошенничество': [20, 10, 60]
+}, index=['Москва', 'Питер', 'Казань'])
+
+ca = prince.CA(n_components=2)
+ca = ca.fit(data)
+# Координаты строк и столбцов
+row_coords = ca.row_coordinates(data)
+col_coords = ca.column_coordinates(data)
+
+# Biplot
+plt.figure(figsize=(10,8))
+plt.scatter(row_coords[0], row_coords[1], c='blue', s=100, label='Города')
+plt.scatter(col_coords[0], col_coords[1], c='red', marker='^', s=100, label='Преступления')
+for city in row_coords.index:
+    plt.annotate(city, (row_coords.loc[city,0], row_coords.loc[city,1]))
+for crime in col_coords.index:
+    plt.annotate(crime, (col_coords.loc[crime,0], col_coords.loc[crime,1]))
+plt.title('CA Biplot: города и преступления')
+plt.xlabel('Измерение 1')
+plt.ylabel('Измерение 2')
+plt.legend()
+plt.grid(alpha=0.3)
+plt.show()</code></pre>
+        <p><strong>Интерпретация</strong>: близость точек на карте означает схожесть профилей (ассоциацию).</p>
+    </div>
+
+    <!-- ========== ПРАКТИКА 10: MCA ========== -->
+    <div class="section">
+        <h2>🔢 Практика 10: Multiple Correspondence Analysis (MCA)</h2>
+        <p><strong>Цель</strong>: анализ нескольких категориальных переменных (опросы, анкеты). MCA — это CA на индикаторной (dummy) матрице или на Burt-матрице.</p>
+        <div class="formula">
+            \[
+            \text{Индикаторная матрица } Z \ (n \times q), \quad 
+            \text{Burt-матрица } B = Z^T Z
+            \]
+            <p>Инерция = сумма собственных значений. Категории рядом → ассоциация.</p>
+        </div>
+        <p><strong>Инструмент</strong>: <code>prince.MCA()</code> (<a href="https://maxhalford.github.io/prince/mca/" target="_blank">документация</a>).</p>
+        <pre><code class="language-python">import prince
+import pandas as pd
+from sklearn.preprocessing import OneHotEncoder
+
+# Данные опроса
+df = pd.DataFrame({
+    'Пол': ['М','М','Ж','Ж','М'],
+    'Возраст': ['молодой','средний','средний','пожилой','молодой'],
+    'Доход': ['низкий','средний','высокий','средний','низкий'],
+    'Предпочтение': ['A','B','A','C','B']
+})
+mca = prince.MCA(n_components=2, one_hot=True)
+mca = mca.fit(df)
+# Координаты индивидов и категорий
+ind_coords = mca.transform(df)
+cat_coords = mca.column_coordinates(df)
+print("Инерция:", mca.eigenvalues_summary_)</code></pre>
+        <h3>📘 Задание на VerticaPy для MCA</h3>
+        <div class="card">
+            <p><strong>VerticaPy + MCA</strong> (интеграция с Vertica DB): используйте <code>vpy</code> для загрузки данных, затем примените <code>prince.MCA</code> или реализуйте собственный расчёт через SVD в Vertica.</p>
+            <pre><code class="language-python"># Установка: pip install verticapy
+import verticapy as vpy
+vpy.connect("vertica://user:pass@localhost:5433/DB")
+# Загрузка таблицы опроса
+df_v = vpy.vDataFrame("survey_data")
+# One-hot кодирование через verticapy
+df_dummy = df_v.get_dummies()
+# Загрузка в pandas для MCA (или прямая реализация SVD)
+import pandas as pd
+df_pd = df_dummy.to_pandas()
+from prince import MCA
+mca = MCA(n_components=2)
+mca.fit(df_pd)</code></pre>
+            <p>💡 Задание: постройте факторную карту категорий и индивидов, интерпретируйте ассоциации.</p>
+        </div>
+    </div>
+
+    <!-- ========== ПРАКТИКА 11: MDS ========== -->
+    <div class="section">
+        <h2>📏 Практика 11: Multidimensional Scaling (MDS)</h2>
+        <p><strong>Цель</strong>: визуализация объектов на основе матрицы попарных расстояний (метрическое или неметрическое шкалирование).</p>
+        <div class="formula">
+            \[
+            \text{Классическое MDS: } B = -\frac{1}{2} H D^2 H, \quad H = I - \frac{1}{n} 11^T
+            \]
+            <p>Собственные векторы \(B\) → координаты. Неметрическое MDS минимизирует стресс: \(\sqrt{\frac{\sum (d_{ij} - \hat{d}_{ij})^2}{\sum d_{ij}^2}}\).</p>
+        </div>
+        <pre><code class="language-python">from sklearn.manifold import MDS
+import numpy as np
+
+# Матрица расстояний (евклидовых или любых)
+dist_matrix = np.array([[0, 1, 2], [1, 0, 1.5], [2, 1.5, 0]])
+mds = MDS(n_components=2, dissimilarity='precomputed', random_state=42)
+coords = mds.fit_transform(dist_matrix)
+print(coords)</code></pre>
+        <p><strong>Связь с предыдущим</strong>: MDS на евклидовых расстояниях эквивалентен PCA. Неевклидовы метрики — уникальное преимущество.</p>
+    </div>
+
+    <!-- ========== ПРАКТИКА 12: Kernel PCA + Isomap ========== -->
+    <div class="section">
+        <h2>🌀 Практика 12: Kernel PCA + Isomap</h2>
+        <p><strong>Цель</strong>: нелинейное снижение размерности для сложных структур (например, «швейцарский руль», полумесяц).</p>
+        <div class="grid-2">
+            <div class="card">
+                <strong>Kernel PCA</strong>
+                <div class="formula">\[
+                \mathbf{K}_{ij} = \langle \phi(x_i), \phi(x_j) \rangle
+                \]</div>
+                <p>Центрирование ядра, PCA в пространстве признаков. Ядра: RBF, полиномиальное.</p>
+                <pre><code class="language-python">from sklearn.decomposition import KernelPCA
+kpca = KernelPCA(n_components=2, kernel='rbf', gamma=15)
+X_kpca = kpca.fit_transform(X_swissroll)</code></pre>
+            </div>
+            <div class="card">
+                <strong>Isomap</strong>
+                <div class="formula">\[
+                \text{Геодезические расстояния → классическое MDS}
+                \]</div>
+                <p>Строится граф k‑ближайших соседей, расстояния кратчайших путей.</p>
+                <pre><code class="language-python">from sklearn.manifold import Isomap
+iso = Isomap(n_components=2, n_neighbors=5)
+X_iso = iso.fit_transform(X_swissroll)</code></pre>
+            </div>
+        </div>
+        <p><strong>Сравнение с предыдущими</strong>: Kernel PCA и Isomap превосходят линейный PCA на нелинейных многообразиях.</p>
+    </div>
+
+    <!-- ========== ОНЛАЙН ТЕСТ ========== -->
+    <div class="section">
+        <h2>📝 Онлайн-тест по практикам 9–12</h2>
+        <div class="quiz-container" id="quiz">
+            <div class="quiz-question">
+                <p><strong>1.</strong> Какое расстояние используется в Correspondence Analysis (CA) для сравнения профилей строк?</p>
+                <label><input type="radio" name="q1" value="a"> Евклидово</label><br>
+                <label><input type="radio" name="q1" value="b"> Манхэттенское</label><br>
+                <label><input type="radio" name="q1" value="c"> Хи-квадрат (\(\chi^2\))</label><br>
+                <label><input type="radio" name="q1" value="d"> Косинусное</label>
+            </div>
+            <div class="quiz-question">
+                <p><strong>2.</strong> MCA – это частный случай CA, применённый к:</p>
+                <label><input type="radio" name="q2" value="a"> Матрице корреляций</label><br>
+                <label><input type="radio" name="q2" value="b"> Индикаторной (dummy) матрице или Burt-матрице</label><br>
+                <label><input type="radio" name="q2" value="c"> Ковариационной матрице</label><br>
+                <label><input type="radio" name="q2" value="d"> Косинусной матрице</label>
+            </div>
+            <div class="quiz-question">
+                <p><strong>3.</strong> Классическое метрическое MDS на евклидовых расстояниях даёт результат, эквивалентный:</p>
+                <label><input type="radio" name="q3" value="a"> Факторному анализу</label><br>
+                <label><input type="radio" name="q3" value="b"> Линейному PCA</label><br>
+                <label><input type="radio" name="q3" value="c"> Кластеризации K‑means</label><br>
+                <label><input type="radio" name="q3" value="d"> t‑SNE</label>
+            </div>
+            <div class="quiz-question">
+                <p><strong>4.</strong> Какой метод нелинейного снижения размерности строит граф k‑ближайших соседей и использует геодезические расстояния?</p>
+                <label><input type="radio" name="q4" value="a"> Kernel PCA</label><br>
+                <label><input type="radio" name="q4" value="b"> Isomap</label><br>
+                <label><input type="radio" name="q4" value="c"> t‑SNE</label><br>
+                <label><input type="radio" name="q4" value="d"> LLE</label>
+            </div>
+            <div class="quiz-question">
+                <p><strong>5.</strong> Визуализация одновременно строк и столбцов в CA называется:</p>
+                <label><input type="radio" name="q5" value="a"> Scree-plot</label><br>
+                <label><input type="radio" name="q5" value="b"> Biplot</label><br>
+                <label><input type="radio" name="q5" value="c"> Дендрограмма</label><br>
+                <label><input type="radio" name="q5" value="d"> Тепловая карта</label>
+            </div>
+            <button class="btn" id="submitQuiz">Проверить ответы</button>
+            <div id="quizResult" class="quiz-result" style="margin-top: 15px; display: none;"></div>
+        </div>
+    </div>
+
+    <!-- ========== ОПРЕДЕЛЕНИЯ И ССЫЛКИ ========== -->
+    <div class="section">
+        <h2>📚 Тезаурус и полезные ссылки</h2>
+        <ul>
+            <li><strong>CA</strong> – Correspondence Analysis, анализ соответствий.</li>
+            <li><strong>MCA</strong> – Multiple Correspondence Analysis, множественный анализ соответствий.</li>
+            <li><strong>MDS</strong> – Multidimensional Scaling, многомерное шкалирование.</li>
+            <li><strong>Burt-матрица</strong> – матрица попарных кросс-таблиц категорий.</li>
+            <li><strong>Kernel PCA</strong> – ядерный метод главных компонент.</li>
+            <li><strong>Isomap</strong> – изометрическое отображение (геодезические расстояния).</li>
+        </ul>
+        <p><strong>Реальные гиперссылки:</strong><br>
+        <a href="https://maxhalford.github.io/prince/ca/" target="_blank">Prince CA docs</a> | 
+        <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.MDS.html" target="_blank">Sklearn MDS</a> | 
+        <a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.KernelPCA.html" target="_blank">KernelPCA</a> | 
+        <a href="https://scikit-learn.org/stable/modules/generated/sklearn.manifold.Isomap.html" target="_blank">Isomap</a></p>
+    </div>
+    <footer>
+        © СамГТУ, кафедра Высшей математики, М.В. Долгополов | Практики 9–12: CA, MCA, MDS, Kernel PCA, Isomap
+    </footer>
+</div>
+
+<script>
+    // ========== ИНТЕРАКТИВНАЯ СХЕМА (D3.js с zoom и drag) ==========
+    const width = document.getElementById('schema-container').clientWidth;
+    const height = 500;
+
+    const svg = d3.select("#schema-container")
+        .append("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .style("background", "#f8fafc")
+        .style("border-radius", "12px")
+        .call(d3.zoom().on("zoom", (event) => {
+            g.attr("transform", event.transform);
+        }))
+        .append("g");
+
+    const g = svg.append("g");
+
+    // Узлы и рёбра
+    const nodes = [
+        { id: "Данные", x: 400, y: 430, color: "#2c5a8c", desc: "Исходные данные: числовые, категориальные, расстояния" },
+        { id: "CA", x: 150, y: 300, color: "#e67e22", desc: "Correspondence Analysis: контингентные таблицы" },
+        { id: "MCA", x: 400, y: 300, color: "#e67e22", desc: "Multiple Correspondence Analysis: dummy-кодирование" },
+        { id: "MDS", x: 650, y: 300, color: "#e67e22", desc: "Multidimensional Scaling: матрица расстояний" },
+        { id: "Kernel PCA", x: 250, y: 150, color: "#16a085", desc: "Нелинейное PCA через ядра" },
+        { id: "Isomap", x: 550, y: 150, color: "#16a085", desc: "Геодезические расстояния + MDS" }
+    ];
+
+    const edges = [
+        { source: "Данные", target: "CA" },
+        { source: "Данные", target: "MCA" },
+        { source: "Данные", target: "MDS" },
+        { source: "CA", target: "MCA" },
+        { source: "MDS", target: "Kernel PCA" },
+        { source: "MDS", target: "Isomap" },
+        { source: "Kernel PCA", target: "Isomap" }
+    ];
+
+    // Рисуем рёбра
+    edges.forEach(edge => {
+        const sourceNode = nodes.find(n => n.id === edge.source);
+        const targetNode = nodes.find(n => n.id === edge.target);
+        if (sourceNode && targetNode) {
+            g.append("line")
+                .attr("x1", sourceNode.x)
+                .attr("y1", sourceNode.y)
+                .attr("x2", targetNode.x)
+                .attr("y2", targetNode.y)
+                .attr("stroke", "#9aa9b9")
+                .attr("stroke-width", 2)
+                .attr("stroke-dasharray", "5,5");
+        }
+    });
+
+    // Рисуем узлы
+    nodes.forEach(node => {
+        const group = g.append("g")
+            .attr("transform", `translate(${node.x}, ${node.y})`)
+            .style("cursor", "pointer");
+
+        group.append("circle")
+            .attr("r", 30)
+            .attr("fill", node.color)
+            .attr("stroke", "#fff")
+            .attr("stroke-width", 2);
+
+        group.append("text")
+            .attr("text-anchor", "middle")
+            .attr("dy", ".3em")
+            .attr("fill", "white")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+            .text(node.id);
+
+        // Tooltip
+        group.on("mouseover", function(event) {
+            const tooltip = d3.select("body").append("div")
+                .attr("class", "tooltip")
+                .style("left", (event.pageX + 10) + "px")
+                .style("top", (event.pageY - 20) + "px")
+                .html(`${node.id}<br>${node.desc}`);
+            group.on("mouseout", () => tooltip.remove());
+        });
+    });
+</script>
+
+<script>
+    // Онлайн тест
+    document.getElementById('submitQuiz').addEventListener('click', () => {
+        const answers = { q1: 'c', q2: 'b', q3: 'b', q4: 'b', q5: 'b' };
+        let score = 0;
+        for (let i = 1; i <= 5; i++) {
+            const selected = document.querySelector(`input[name="q${i}"]:checked`);
+            if (selected && selected.value === answers[`q${i}`]) score++;
+        }
+        const resultDiv = document.getElementById('quizResult');
+        resultDiv.style.display = 'block';
+        resultDiv.innerHTML = `<strong>Результат: ${score} из 5</strong><br>${score===5 ? 'Отлично! Вы готовы к защите.' : 'Рекомендуем повторить теорию.'}`;
+        resultDiv.style.background = '#d4edda';
+        resultDiv.style.padding = '10px';
+        resultDiv.style.borderRadius = '8px';
+    });
+</script>
+</body>
+</html>

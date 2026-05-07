@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Итоговые лекции 7–8: Синтез методов многомерного анализа</title>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            color: #1e2a3a;
+            line-height: 1.5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        header {
+            background: linear-gradient(135deg, #1e466e, #2c5a8c);
+            color: white;
+            padding: 30px;
+            border-radius: 24px 24px 0 0;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2rem;
+        }
+        .lecture-meta {
+            background: #eef2f7;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #1e466e;
+            border-left: 5px solid #e67e22;
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        h3 {
+            margin: 20px 0 10px 0;
+            color: #2c5a8c;
+        }
+        .grid-2, .grid-3 {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .card {
+            background: #f9fafc;
+            border-radius: 16px;
+            padding: 20px;
+            flex: 1;
+            min-width: 250px;
+            border: 1px solid #e2e8f0;
+        }
+        code {
+            background: #eef2f7;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+        }
+        pre {
+            background: #1e2a3a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        .formula {
+            background: #f7f9fc;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.1rem;
+            border: 1px solid #dce4ec;
+        }
+        .btn {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background: #d35400;
+        }
+        .quiz-container {
+            background: #fef9e6;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .quiz-question {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #fff7e0;
+            border-radius: 12px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #eef2f7;
+        }
+        a {
+            color: #e67e22;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #6c757d;
+        }
+        .badge {
+            background: #e67e22;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>📊 Итоговые лекции 7–8: Синтез методов многомерного анализа</h1>
+        <p>PCA · FA · CA · MCA · MDS · Kernel PCA · Isomap · Выбор метода · Применения</p>
+    </header>
+    <div class="lecture-meta">
+        <span>📘 Курс: Анализ данных (магистратура) | СамГТУ</span>
+        <span>👨‍🏫 Преподаватель: М.В. Долгополов</span>
+        <span>🔄 Итоговая сертификация: Universal Dimensionality Reduction Engineer</span>
+    </div>
+
+    <!-- ========== Лекция 7: Синтез ========== -->
+    <div class="section">
+        <h2>📐 Лекция 7: Метрическая классификация методов</h2>
+        <p><strong>Цель:</strong> Построение единой системы выбора метода снижения размерности в зависимости от типа данных и цели анализа.</p>
+        
+        <h3>1.1. Финальный словарь терминов (русский / english)</h3>
+        <div class="grid-2">
+            <div class="card">
+                <strong>PCA (Principal Component Analysis)</strong> — анализ главных компонент, линейное сжатие по дисперсии.<br>
+                <strong>FA (Factor Analysis)</strong> — факторный анализ, моделирование латентных факторов.<br>
+                <strong>CA (Correspondence Analysis)</strong> — анализ соответствий для контингентных таблиц.<br>
+                <strong>MCA (Multiple Correspondence Analysis)</strong> — множественный анализ соответствий (категориальные данные).<br>
+            </div>
+            <div class="card">
+                <strong>MDS (Multidimensional Scaling)</strong> — многомерное шкалирование по матрице расстояний.<br>
+                <strong>KPCA (Kernel Principal Component Analysis)</strong> — нелинейный PCA через ядро.<br>
+                <strong>Isomap (Isometric Mapping)</strong> — нелинейное сжатие через геодезические расстояния.<br>
+                <strong>Λ (loadings)</strong> — факторные нагрузки, корреляция переменной с фактором.<br>
+                <strong>h² (communality)</strong> — доля дисперсии, объяснённая общими факторами.
+            </div>
+        </div>
+
+        <h3>1.2. Метрическая классификация методов (единая схема)</h3>
+        <pre style="background:#f0f4f8; color:#1e2a3a; overflow-x:auto;">
+┌─────────────────────────────────────────────────────────────┐
+│                  Многомерный анализ                        │
+├─────────────────────┼─────────────────────┼─────────────────┤
+│    Линейные         │  Категориальные     │   Нелинейные    │
+│ (дисперсия)         │ (частоты)          │ (расстояния)    │
+├─────────────────────┼─────────────────────┼─────────────────┤
+│ PCA                 │ CA (П9)            │ Kernel PCA (П12)│
+│ FA/EFA/CFA (П7-8)   │ MCA (П10)          │ Isomap (П12)    │
+│                     │                    │                 │
+└─────────────────────┴─────────────────────┴─────────────────┘
+                              │
+                       MDS (П11)
+                    (любые расстояния)
+        </pre>
+
+        <h3>1.3. Единая математическая основа — SVD</h3>
+        <div class="formula">
+            \[
+            \text{PCA: } \Sigma = U\Lambda U^T,\quad 
+            \text{CA: } D_r^{-1/2}(P-rc^T)D_c^{-1/2}=U\Lambda V^T
+            \]
+            \[
+            \text{MDS: } B=-\frac{1}{2}H D^2 H,\quad B = U\Lambda U^T,\quad 
+            \text{KPCA: } K = \Phi(X)\Phi(X)^T = U\Lambda U^T
+            \]
+        </div>
+        <p>Все методы сводятся к сингулярному разложению (SVD) некоторой матрицы сходства/расстояния/ковариации.</p>
+
+        <h3>1.4. Алгоритм выбора метода (choose_method())</h3>
+        <pre><code class="language-python">def choose_method(data_type, nonlinearity=False):
+    """Автоматический выбор метода снижения размерности."""
+    if data_type == "numeric": 
+        return "PCA/FA (линейное сжатие)"
+    elif data_type == "categorical": 
+        return "MCA (one-hot + CA)"
+    elif data_type == "contingency": 
+        return "CA (χ²-расстояние)"
+    elif data_type == "distances": 
+        return "MDS (классическое или неметрическое)"
+    elif nonlinearity:
+        return "KernelPCA или Isomap (нелинейные manifold)"
+    else:
+        return "Попробуйте t-SNE или UMAP"
+        </code></pre>
+        <p>Пример вызова: <code>choose_method("categorical")</code> → MCA.</p>
+    </div>
+
+    <!-- ========== Лекция 8: Применения и перспективы ========== -->
+    <div class="section">
+        <h2>🚀 Лекция 8: Применения, перспективы, автоматизация</h2>
+        
+        <h3>2.1. Классификация приложений по компетенциям курса</h3>
+        <table>
+            <thead><th>Сфера</th><th>Метод</th><th>Задача</th><th>Эффективность</th><th>Компетенция</th></thead>
+            <tbody>
+                <tr><td>Маркетинг</td><td>MCA/CA</td><td>Сегментация клиентов</td><td>★★★★★</td><td>ПК-2 (категории)</td></tr>
+                <tr><td>Медицина</td><td>FA/CFA</td><td>Факторы риска заболеваний</td><td>★★★★☆</td><td>ПК-1 (латентные)</td></tr>
+                <tr><td>География</td><td>MDS</td><td>Карта расстояний между городами</td><td>★★★★★</td><td>ПК-3 (автоматизация)</td></tr>
+                <tr><td>Производство</td><td>PCA</td><td>Контроль качества (SPC)</td><td>★★★★☆</td><td>ПК-1 (дисперсия)</td></tr>
+                <tr><td>HR</td><td>FA</td><td>Факторы компетенций</td><td>★★★★☆</td><td>ПК-2 (опросники)</td></tr>
+                <tr><td>Финансы</td><td>KernelPCA</td><td>Нелинейные риски (опционы)</td><td>★★★☆☆</td><td>ПК-3 (kernel)</td></tr>
+            </tbody>
+        </table>
+
+        <h3>2.2. Перспективы развития (2026+)</h3>
+        <div class="grid-2">
+            <div class="card">
+                <strong>1. AutoML для многомерного анализа</strong><br>
+                H2O.ai, DataRobot — автоматический выбор метода и числа компонент.
+            </div>
+            <div class="card">
+                <strong>2. Deep Manifold Learning</strong><br>
+                Вариационные автоэнкодеры (VAE) как нелинейная альтернатива факторному анализу.
+            </div>
+            <div class="card">
+                <strong>3. Causal FA</strong><br>
+                Интеграция факторного анализа с причинно-следственными моделями (Do-calculus).
+            </div>
+            <div class="card">
+                <strong>4. Scalable CA/MCA</strong><br>
+                Реализации на Spark/Dask для таблиц с миллионами строк.
+            </div>
+            <div class="card">
+                <strong>5. Explainable AI + FA</strong><br>
+                Интерпретируемые латентные факторы для медицинских и банковских приложений.
+            </div>
+        </div>
+        <div class="formula">
+            \[
+            \text{Будущее} = \text{PCA/FA} + \{\text{Deep Learning}, \text{Causal Inference}, \text{Big Data}\}
+            \]
+        </div>
+
+        <h3>2.3. Промышленный pipeline синтеза</h3>
+        <pre><code class="language-python"># Универсальный pipeline снижения размерности
+from sklearn.pipeline import Pipeline
+def universal_pipeline(data_type, X, **params):
+    if data_type == "categorical":
+        from prince import MCA
+        return Pipeline([('dummy', OneHotEncoder()), ('mca', MCA(n_components=2))])
+    elif data_type == "numeric":
+        from sklearn.decomposition import PCA
+        return Pipeline([('scale', StandardScaler()), ('pca', PCA(n_components=0.95))])
+    elif data_type == "distances":
+        from sklearn.manifold import MDS
+        return MDS(dissimilarity='precomputed')
+    else:
+        return KernelPCA(kernel='rbf')
+        </code></pre>
+        <p>Результат — готовый к production код для визуализации и интерпретации.</p>
+
+        <h3>2.4. Компетенции курса vs промышленные задачи</h3>
+        <table>
+            <thead><th>ПК</th><th>Задача</th><th>Метод</th><th>ROI (оценка)</th></thead>
+            <tbody>
+                <tr><td>ПК-1</td><td>Факторизация сложных систем</td><td>FA/CFA</td><td>Высокий</td></tr>
+                <tr><td>ПК-2</td><td>Кластеризация и сегментация</td><td>PCA + K‑means</td><td>Высокий</td></tr>
+                <tr><td>ПК-3</td><td>Автоматизация принятия решений</td><td>Pipelines + API</td><td>Критический</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ========== ОНЛАЙН ТЕСТ ========== -->
+    <div class="section">
+        <h2>📝 Итоговый онлайн-тест (лекции 1–12)</h2>
+        <div class="quiz-container" id="finalQuiz">
+            <div class="quiz-question">
+                <p><strong>1.</strong> Какой метод использует χ²-расстояние и SVD для визуализации контингентных таблиц?</p>
+                <label><input type="radio" name="q1" value="a"> PCA</label><br>
+                <label><input type="radio" name="q1" value="b"> CA</label><br>
+                <label><input type="radio" name="q1" value="c"> MDS</label><br>
+                <label><input type="radio" name="q1" value="d"> t‑SNE</label>
+            </div>
+            <div class="quiz-question">
+                <p><strong>2.</strong> Мера пригодности данных для факторного анализа (FA) называется:</p>
+                <label><input type="radio" name="q2" value="a"> KMO</label><br>
+                <label><input type="radio" name="q2" value="b"> Bartlett test</label><br>
+                <label><input type="radio" name="q2" value="c"> Silhouette</label><br>
+                <label><input type="radio" name="q2" value="d"> EVR</label>
+            </div>
+            <div class="quiz-question">
+                <p><strong>3.</strong> Какой метод строит граф k‑ближайших соседей и использует геодезические расстояния?</p>
+                <label><input type="radio" name="q3" value="a"> Isomap</label><br>
+                <label><input type="radio" name="q3" value="b"> Kernel PCA</label><br>
+                <label><input type="radio" name="q3" value="c"> t‑SNE</label><br>
+                <label><input type="radio" name="q3" value="d"> MCA</label>
+            </div>
+            <div class="quiz-question">
+                <p><strong>4.</strong> Классическое многомерное шкалирование (MDS) на евклидовых расстояниях эквивалентно:</p>
+                <label><input type="radio" name="q4" value="a"> факторному анализу</label><br>
+                <label><input type="radio" name="q4" value="b"> линейному PCA</label><br>
+                <label><input type="radio" name="q4" value="c"> кластеризации K‑means</label><br>
+                <label><input type="radio" name="q4" value="d"> CA</label>
+            </div>
+            <div class="quiz-question">
+                <p><strong>5.</strong> Какая аббревиатура соответствует множественному анализу соответствий?</p>
+                <label><input type="radio" name="q5" value="a"> MDS</label><br>
+                <label><input type="radio" name="q5" value="b"> MCA</label><br>
+                <label><input type="radio" name="q5" value="c"> KPCA</label><br>
+                <label><input type="radio" name="q5" value="d"> EFA</label>
+            </div>
+            <button class="btn" id="submitFinal">Проверить ответы</button>
+            <div id="finalResult" style="margin-top: 15px; padding: 10px; border-radius: 8px; display: none;"></div>
+        </div>
+    </div>
+
+    <!-- ========== Полезные ресурсы ========== -->
+    <div class="section">
+        <h2>📚 Литература и гиперссылки</h2>
+        <ul>
+            <li><a href="https://scikit-learn.org/stable/modules/decomposition.html" target="_blank">Scikit‑learn: PCA, KernelPCA, MDS</a></li>
+            <li><a href="https://maxhalford.github.io/prince/" target="_blank">Prince: CA, MCA</a></li>
+            <li><a href="https://www.statsmodels.org/stable/factor.html" target="_blank">Statsmodels: Factor Analysis</a></li>
+            <li><a href="https://en.wikipedia.org/wiki/Multidimensional_scaling" target="_blank">MDS на Wikipedia</a></li>
+            <li><a href="https://jakevdp.github.io/PythonDataScienceHandbook/" target="_blank">Python Data Science Handbook (Jake VanderPlas)</a></li>
+        </ul>
+    </div>
+
+    <footer>
+        © СамГТУ, кафедра Высшей математики, М.В. Долгополов | Итоговая сертификация: Universal Dimensionality Reduction Engineer
+    </footer>
+</div>
+
+<script>
+    document.getElementById('submitFinal').addEventListener('click', () => {
+        const answers = { q1: 'b', q2: 'a', q3: 'a', q4: 'b', q5: 'b' };
+        let score = 0;
+        for (let i = 1; i <= 5; i++) {
+            const selected = document.querySelector(`input[name="q${i}"]:checked`);
+            if (selected && selected.value === answers[`q${i}`]) score++;
+        }
+        const resultDiv = document.getElementById('finalResult');
+        resultDiv.style.display = 'block';
+        resultDiv.style.background = '#d4edda';
+        resultDiv.style.padding = '10px';
+        resultDiv.style.borderRadius = '8px';
+        if (score === 5) {
+            resultDiv.innerHTML = '<strong>✅ Поздравляем! Вы готовы к защите.</strong><br>Уровень: Universal Dimensionality Reduction Engineer.';
+        } else if (score >= 3) {
+            resultDiv.innerHTML = `<strong>📊 Результат: ${score} из 5.</strong><br>Хорошо, но рекомендуем повторить разделы о CA/MCA и MDS.`;
+        } else {
+            resultDiv.innerHTML = `<strong>⚠️ Результат: ${score} из 5.</strong><br>Стоит пересмотреть лекции 7–8 и пройти тест заново.`;
+        }
+    });
+</script>
+</body>
+</html>
