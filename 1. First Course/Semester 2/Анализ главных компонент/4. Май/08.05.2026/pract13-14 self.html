@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Практики 13–14: Систематизация методов и Production Pipeline</title>
+    <!-- MathJax -->
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+    <!-- Подсветка кода -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            color: #1e2a3a;
+            line-height: 1.5;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        header {
+            background: linear-gradient(135deg, #1e466e, #2c5a8c);
+            color: white;
+            padding: 30px;
+            border-radius: 24px 24px 0 0;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2rem;
+        }
+        .lecture-meta {
+            background: #eef2f7;
+            padding: 12px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        h2 {
+            color: #1e466e;
+            border-left: 5px solid #e67e22;
+            padding-left: 15px;
+            margin-bottom: 20px;
+        }
+        h3 {
+            margin: 20px 0 10px 0;
+            color: #2c5a8c;
+        }
+        .grid-2, .grid-3 {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        .card {
+            background: #f9fafc;
+            border-radius: 16px;
+            padding: 20px;
+            flex: 1;
+            min-width: 250px;
+            border: 1px solid #e2e8f0;
+        }
+        .formula {
+            background: #f7f9fc;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 15px 0;
+            font-size: 1.1rem;
+            border: 1px solid #dce4ec;
+        }
+        pre {
+            background: #1e2a3a;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 12px;
+            overflow-x: auto;
+            margin: 15px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background: #eef2f7;
+        }
+        .btn {
+            background: #e67e22;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background: #d35400;
+        }
+        .quiz-container {
+            background: #fef9e6;
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .quiz-question {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #fff7e0;
+            border-radius: 12px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            color: #6c757d;
+        }
+        .badge {
+            background: #e67e22;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border-radius: 30px 30px 0 0;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #e67e22;
+            color: white;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .grid-2, .grid-3 { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>📊 Практики 13–14: Систематизация методов и Production Pipeline</h1>
+        <p>Выбор оптимального метода · Универсальный пайплайн · Case Study · Deployment</p>
+    </header>
+    <div class="lecture-meta">
+        <span>📘 Курс: Анализ данных (магистратура) | СамГТУ</span>
+        <span>👨‍🏫 Преподаватель: М.В. Долгополов</span>
+        <span>🏭 Интеграция в производство | AutoML | ROI</span>
+    </div>
+
+    <!-- ========== НАВИГАЦИЯ ПО ТАБАМ ========== -->
+    <div class="section">
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="p13">Практика 13: Метод-селектор</button>
+            <button class="tab-btn" data-tab="p14">Практика 14: Production Pipeline</button>
+            <button class="tab-btn" data-tab="test">Итоговый тест (13–14)</button>
+        </div>
+
+        <!-- ПРАКТИКА 13 -->
+        <div id="p13" class="tab-content active">
+            <h2>🔍 Практика 13: Сравнительный анализ методов + Выбор оптимального</h2>
+            <p><strong>Цель:</strong> Научиться обоснованно выбирать метод многомерного анализа на основе характеристик данных и требований к интерпретации.</p>
+
+            <h3>📌 Расшифровка сокращений (повторение + новые)</h3>
+            <div class="grid-2">
+                <div class="card">PCA – Principal Component Analysis (линейное сжатие по дисперсии)<br>FA – Factor Analysis (латентные факторы)<br>CA – Correspondence Analysis (контингентные таблицы)</div>
+                <div class="card">MCA – Multiple Correspondence Analysis (категориальные данные)<br>MDS – Multidimensional Scaling (расстояния)<br>Isomap – изометрическое отображение (геодезические расстояния)</div>
+                <div class="card">KMO – Kaiser-Meyer-Olkin (мера пригодности FA)<br>EVR – Explained Variance Ratio (доля дисперсии)</div>
+            </div>
+
+            <h3>1. Диагностика данных (автоматический выбор метода)</h3>
+            <pre><code class="language-python">import pandas as pd
+import numpy as np
+from sklearn.decomposition import PCA, FactorAnalysis, KernelPCA
+from sklearn.manifold import Isomap
+from sklearn.preprocessing import StandardScaler
+import prince
+
+def diagnose_data(df):
+    """Автоматическая диагностика и рекомендация метода"""
+    n, p = df.shape
+    numeric_cols = df.select_dtypes(include=[np.number]).columns
+    cat_cols = df.select_dtypes(include=['object', 'category']).columns
+    
+    # KMO тест (для FA) – упрощённо
+    kmo_value = 0.0
+    if len(numeric_cols) > 1:
+        corr = df[numeric_cols].corr().values
+        kmo_value = np.abs(corr).mean()  # proxy
+    
+    # Простая проверка нелинейности (ранговая корреляция расстояний)
+    linearity_score = 1.0  # заглушка
+    
+    if len(cat_cols) > len(numeric_cols):
+        return "MCA (анализ категориальных данных)"
+    elif kmo_value > 0.7 and linearity_score > 0.8:
+        return "FA (факторный анализ)"
+    elif linearity_score < 0.5:
+        return "Isomap / KernelPCA (нелинейное)"
+    else:
+        return "PCA (анализ главных компонент)"
+            </code></pre>
+            <div class="formula">
+                \[
+                \text{KMO} = \frac{\sum\sum_{i\neq j} r_{ij}^2}{\sum\sum_{i\neq j} r_{ij}^2 + \sum\sum_{i\neq j} p_{ij}^2}
+                \]
+                (где \(r_{ij}\) – парные корреляции, \(p_{ij}\) – частные)
+            </div>
+
+            <h3>2. Сравнительная таблица методов</h3>
+            <table>
+                <thead><tr><th>Критерий</th><th>PCA</th><th>FA</th><th>CA</th><th>MCA</th><th>MDS</th><th>KPCA</th><th>Isomap</th></tr></thead>
+                <tbody>
+                    <tr><td>Тип данных</td><td>Числовые</td><td>Числовые</td><td>Частоты</td><td>Категории</td><td>Расстояния</td><td>Числовые</td><td>Любые</td></tr>
+                    <tr><td>Линейность</td><td>✓</td><td>✓</td><td>✓</td><td>✓</td><td>Любая</td><td>✗</td><td>✗</td></tr>
+                    <tr><td>Латентные факторы</td><td>✗</td><td>✓</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td><td>✗</td></tr>
+                    <tr><td>Scalability</td><td>★★★★★</td><td>★★★☆☆</td><td>★★★☆☆</td><td>★★☆☆☆</td><td>★★★★☆</td><td>★★☆☆☆</td><td>★★☆☆☆</td></tr>
+                    <tr><td>Интерпретируемость</td><td>★★★★☆</td><td>★★★★★</td><td>★★★★★</td><td>★★★★☆</td><td>★★★☆☆</td><td>★★☆☆☆</td><td>★★☆☆☆</td></tr>
+                    <tr><td>Сложность (big-O)</td><td>O(p³)</td><td>O(p³+iter)</td><td>O(min(n,p)³)</td><td>O((np)³)</td><td>O(n³)</td><td>O(n²p)</td><td>O(n²k)</td></tr>
+                    <tr><td>sklearn / prince</td><td>PCA()</td><td>FactorAnalysis()</td><td>prince.CA()</td><td>prince.MCA()</td><td>MDS()</td><td>KernelPCA()</td><td>Isomap()</td></tr>
+                </tbody>
+            </table>
+
+            <h3>3. Задания практики 13 (с решениями)</h3>
+            <div class="card">
+                <strong>📌 Задание 1: Customer Behavior (числовые + категориальные)</strong><br>
+                <pre><code class="language-python"># Данные: 10 числовых, 5 категориальных
+pca = PCA(n_components=2).fit(df_numeric)
+mca = prince.MCA(n_components=2).fit(df_categorical)
+# Совместная визуализация кластеров через biplot
+from sklearn.cluster import KMeans
+kmeans = KMeans(n_clusters=3).fit(np.hstack([pca.transform(df_numeric), mca.transform(df_categorical)]))</code></pre>
+                <summary>🔍 Решение: PCA для числовых, MCA для категориальных, затем кластеризация.</summary>
+            </div>
+            <div class="card">
+                <strong>📌 Задание 2: Swiss Roll – сравнение PCA, Isomap, KernelPCA</strong><br>
+                <pre><code class="language-python">from sklearn.datasets import make_swiss_roll
+X, _ = make_swiss_roll(n_samples=1000, noise=0.1)
+pca_2d = PCA(n_components=2).fit_transform(X)          # плохо
+iso_2d = Isomap(n_neighbors=10, n_components=2).fit_transform(X)  # отлично
+kpca_2d = KernelPCA(kernel='rbf', gamma=0.1, n_components=2).fit_transform(X)</code></pre>
+                <p><strong>Вывод:</strong> Isomap лучше всего разворачивает многообразие.</p>
+            </div>
+            <div class="card">
+                <strong>📌 Задание 3: Wine Quality – FA vs PCA</strong><br>
+                <pre><code class="language-python">from sklearn.decomposition import FactorAnalysis
+fa = FactorAnalysis(n_components=3, rotation='varimax').fit(X_scaled)
+loadings = fa.components_.T
+# Интерпретация: Factor1 = кислотность, Factor2 = алкоголь, Factor3 = летучесть</code></pre>
+                <p>FA позволяет интерпретировать скрытые факторы, PCA — только технические компоненты.</p>
+            </div>
+            <h3>🔁 Связь с предыдущими практиками</h3>
+            <div class="formula">
+                П1-2 (PCA) → П3-4 (EVR) → П5-6 (FA) → П7-8 (CA/MCA) → П9-12 (MDS/Isomap) → <strong>П13 (сравнение)</strong>
+            </div>
+        </div>
+
+        <!-- ПРАКТИКА 14 -->
+        <div id="p14" class="tab-content">
+            <h2>⚙️ Практика 14: Production Pipeline + Case Study</h2>
+            <p><strong>Цель:</strong> Создать автоматизированный пайплайн для внедрения методов многомерного анализа в промышленную среду.</p>
+
+            <h3>1. Универсальный класс снижения размерности</h3>
+            <pre><code class="language-python">from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA, FactorAnalysis, KernelPCA
+from sklearn.manifold import Isomap
+import prince
+
+class UniversalDimReduction:
+    def __init__(self, method='auto', n_components=2):
+        self.method = method
+        self.n_components = n_components
+        self.model = None
+
+    def fit(self, X, y=None):
+        if self.method == 'auto':
+            self.method = self._choose_method(X)
+        if self.method == 'pca':
+            self.model = Pipeline([('scaler', StandardScaler()), ('pca', PCA(n_components=self.n_components))])
+        elif self.method == 'fa':
+            self.model = Pipeline([('scaler', StandardScaler()), ('fa', FactorAnalysis(n_components=self.n_components))])
+        elif self.method == 'mca':
+            self.model = prince.MCA(n_components=self.n_components)
+        elif self.method == 'isomap':
+            self.model = Isomap(n_components=self.n_components)
+        self.model.fit(X)
+        return self
+
+    def transform(self, X):
+        return self.model.transform(X)
+
+    def _choose_method(self, X):
+        # упрощённый эвристический выбор
+        if X.select_dtypes(include=['object', 'category']).shape[1] > 0:
+            return 'mca'
+        else:
+            return 'pca'</code></pre>
+
+            <h3>2. Case Study: Retail Analytics (сегментация клиентов)</h3>
+            <pre><code class="language-python">import pandas as pd
+from sklearn.cluster import KMeans
+import prince
+from sklearn.decomposition import PCA
+
+# Загрузка данных (числовые + категориальные)
+df = pd.read_csv('retail.csv')
+num_cols = ['total_spend', 'num_items', 'time_in_store']
+cat_cols = ['category', 'day_of_week', 'payment_method']
+
+# PCA для числовых
+scaler = StandardScaler()
+X_num = scaler.fit_transform(df[num_cols])
+pca = PCA(n_components=3)
+X_pca = pca.fit_transform(X_num)
+
+# MCA для категориальных
+mca = prince.MCA(n_components=3)
+X_mca = mca.fit_transform(df[cat_cols]).values
+
+# Объединение и кластеризация
+X_combined = np.hstack([X_pca, X_mca])
+kmeans = KMeans(n_clusters=5, random_state=42)
+clusters = kmeans.fit_predict(X_combined)
+
+df['cluster'] = clusters
+profile = df.groupby('cluster').agg({
+    'total_spend': 'mean',
+    'num_items': 'mean',
+    'category': lambda x: x.mode()[0],
+    'payment_method': lambda x: x.mode()[0]
+})
+print(profile)</code></pre>
+            <div class="card">
+                <strong>📊 Профили кластеров:</strong><br>
+                <table>
+                    <thead><tr><th>Кластер</th><th>Профиль</th><th>Стратегия маркетинга</th></tr></thead>
+                    <tbody>
+                        <tr><td>0</td><td>Молодые, карты, вечер</td><td>Email промо, ночные скидки</td></tr>
+                        <tr><td>1</td><td>Пожилые, наличные, утро</td><td>Купоны в почту</td></tr>
+                        <tr><td>2</td><td>Семьи, большие покупки</td><td>Скидки на опт</td></tr>
+                        <tr><td>3</td><td>Студенты, малые покупки</td><td>Программа лояльности</td></tr>
+                        <tr><td>4</td><td>Премиум-сегмент</td><td>VIP-карты</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <h3>3. Deployment (Flask API + Streamlit)</h3>
+            <pre><code class="language-python"># Flask API
+from flask import Flask, request, jsonify
+app = Flask(__name__)
+
+@app.route('/predict', methods=['POST'])
+def predict():
+    data = request.json
+    X = pd.DataFrame(data)
+    reducer = UniversalDimReduction(method='auto')
+    reducer.fit(X)
+    X_red = reducer.transform(X)
+    kmeans = KMeans(n_clusters=5).fit(X_red)
+    clusters = kmeans.predict(X_red)
+    return jsonify({'clusters': clusters.tolist()})
+
+if __name__ == '__main__':
+    app.run(debug=True)</code></pre>
+            <pre><code class="language-python"># Streamlit dashboard
+import streamlit as st
+st.title("Анализ многомерных данных")
+uploaded = st.file_uploader("Загрузите CSV")
+if uploaded:
+    df = pd.read_csv(uploaded)
+    method = st.selectbox("Метод", ['auto','pca','fa','mca','isomap'])
+    reducer = UniversalDimReduction(method=method)
+    reducer.fit(df)
+    st.write(f"Выбран метод: {reducer.method}")
+    st.scatter_chart(reducer.transform(df))</code></pre>
+
+            <h3>4. Задания для самостоятельной работы</h3>
+            <div class="grid-2">
+                <div class="card"><strong>Healthcare</strong><br>20 биомаркеров + 10 категориальных. Используйте FA для выделения 3 латентных факторов (метаболический синдром, воспаление).</div>
+                <div class="card"><strong>Geographic MDS</strong><br>Матрица расстояний 50 городов → метрическое MDS → проверка корреляции 2D-расстояний с реальными >0.85.</div>
+                <div class="card"><strong>Text Mining (LSA)</strong><br>TF-IDF 1000×500. Сравните PCA (центрирование разрушает разреженность) и Truncated SVD (LSA).</div>
+            </div>
+
+            <h3>5. Связь практик 13 и 14 + Тренды 2026+</h3>
+            <div class="formula">
+                П13 (диагностика + выбор метода) → П14 (универсальный пайплайн → API → мониторинг)
+            </div>
+            <div class="grid-2">
+                <div class="card">
+                    <strong>Топ-5 трендов:</strong>
+                    <ul><li>AutoML для снижения размерности (H2O, DataRobot)</li><li>Real-time streaming PCA (Kafka + sklearn)</li><li>Federated FA (без обмена данными)</li><li>Explainable MDS (SHAP для расстояний)</li><li>Quantum PCA (квантовые алгоритмы)</li></ul>
+                </div>
+                <div class="card">
+                    <strong>ROI по отраслям:</strong>
+                    <ul><li>Retail: +15% конверсия (MCA)</li><li>Healthcare: -20% ошибок диагностики (FA)</li><li>Manufacturing: -30% брака (PCA)</li><li>Finance: +10% точность прогноза (KPCA)</li></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ТЕСТ -->
+        <div id="test" class="tab-content">
+            <h2>📝 Итоговый тест (практики 13–14)</h2>
+            <div class="quiz-container" id="finalQuiz">
+                <div class="quiz-question">
+                    <p><strong>1.</strong> Какой метод автоматически выберет diagnose_data() для набора данных с 8 числовыми признаками и высоким KMO (>0.7)?</p>
+                    <label><input type="radio" name="q1" value="a"> PCA</label><br>
+                    <label><input type="radio" name="q1" value="b"> FA</label><br>
+                    <label><input type="radio" name="q1" value="c"> MCA</label><br>
+                    <label><input type="radio" name="q1" value="d"> Isomap</label>
+                </div>
+                <div class="quiz-question">
+                    <p><strong>2.</strong> Какой метод является оптимальным для развёртывания нелинейного многообразия (Swiss roll)?</p>
+                    <label><input type="radio" name="q2" value="a"> PCA</label><br>
+                    <label><input type="radio" name="q2" value="b"> MDS</label><br>
+                    <label><input type="radio" name="q2" value="c"> Isomap</label><br>
+                    <label><input type="radio" name="q2" value="d"> FactorAnalysis</label>
+                </div>
+                <div class="quiz-question">
+                    <p><strong>3.</strong> Для сегментации клиентов на основе категориальных анкетных данных лучше всего подходит:</p>
+                    <label><input type="radio" name="q3" value="a"> PCA</label><br>
+                    <label><input type="radio" name="q3" value="b"> MCA</label><br>
+                    <label><input type="radio" name="q3" value="c"> KernelPCA</label><br>
+                    <label><input type="radio" name="q3" value="d"> Isomap</label>
+                </div>
+                <div class="quiz-question">
+                    <p><strong>4.</strong> Какой метод позволяет выделить интерпретируемые латентные факторы (например, "метаболический синдром")?</p>
+                    <label><input type="radio" name="q4" value="a"> PCA</label><br>
+                    <label><input type="radio" name="q4" value="b"> FA</label><br>
+                    <label><input type="radio" name="q4" value="c"> MCA</label><br>
+                    <label><input type="radio" name="q4" value="d"> MDS</label>
+                </div>
+                <div class="quiz-question">
+                    <p><strong>5.</strong> Для визуализации матрицы попарных расстояний между 50 городами следует применить:</p>
+                    <label><input type="radio" name="q5" value="a"> PCA</label><br>
+                    <label><input type="radio" name="q5" value="b"> MDS</label><br>
+                    <label><input type="radio" name="q5" value="c"> CA</label><br>
+                    <label><input type="radio" name="q5" value="d"> FA</label>
+                </div>
+                <button class="btn" id="submitFinal">Проверить ответы</button>
+                <div id="finalResult" style="margin-top: 15px; padding: 10px; border-radius: 8px; display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        © СамГТУ, кафедра Высшей математики, М.В. Долгополов | Практики 13–14: Систематизация, Production, ROI
+    </footer>
+</div>
+<script>
+    // Табы
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const tabId = btn.dataset.tab;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        });
+    });
+
+    // Тест
+    document.getElementById('submitFinal').addEventListener('click', () => {
+        const answers = { q1: 'b', q2: 'c', q3: 'b', q4: 'b', q5: 'b' };
+        let score = 0;
+        for (let i = 1; i <= 5; i++) {
+            const selected = document.querySelector(`input[name="q${i}"]:checked`);
+            if (selected && selected.value === answers[`q${i}`]) score++;
+        }
+        const resultDiv = document.getElementById('finalResult');
+        resultDiv.style.display = 'block';
+        resultDiv.style.background = '#d4edda';
+        resultDiv.style.padding = '10px';
+        resultDiv.style.borderRadius = '8px';
+        if (score === 5) {
+            resultDiv.innerHTML = '<strong>✅ Отлично! Вы готовы к внедрению методов в production.</strong>';
+        } else if (score >= 3) {
+            resultDiv.innerHTML = `<strong>📊 Результат: ${score} из 5.</strong><br>Повторите разделы о выборе метода и пайплайнах.`;
+        } else {
+            resultDiv.innerHTML = `<strong>⚠️ Результат: ${score} из 5.</strong><br>Рекомендуем пересмотреть лекции 13–14.`;
+        }
+    });
+</script>
+</body>
+</html>
